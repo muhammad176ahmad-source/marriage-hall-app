@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Marriage Hall Booking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmQa2RhSkRk5GxyrM8Q0Swzi3isYTTEGw",
+      authDomain: "marriage-hall-booking-fa55a.firebaseapp.com",
+      projectId: "marriage-hall-booking-fa55a",
+      storageBucket: "marriage-hall-booking-fa55a.firebasestorage.app",
+      messagingSenderId: "457648523161",
+      appId: "1:457648523161:web:bfbb62a6aa240aff39b508",
+      measurementId: "G-49KTVGSX3N"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</head>
+
+<body>
+
+  <!-- Loader -->
+  <div class="flutter-loader">
+    <div class="indeterminate"></div>
+  </div>
+
+  <style>
+    .flutter-loader {
+      width: 100%;
+      height: 6px;
+      background-color: #13B9FD;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+      overflow: hidden;
+    }
+
+    .indeterminate {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .indeterminate:before {
+      content: '';
+      position: absolute;
+      height: 100%;
+      background-color: #0175C2;
+      animation: indeterminate_first 2s infinite ease-out;
+    }
+
+    .indeterminate:after {
+      content: '';
+      position: absolute;
+      height: 100%;
+      background-color: #02569B;
+      animation: indeterminate_second 2s infinite ease-in;
+    }
+
+    @keyframes indeterminate_first {
+      0% {
+        left: -100%;
+        width: 100%;
+      }
+
+      100% {
+        left: 100%;
+        width: 10%;
+      }
+    }
+
+    @keyframes indeterminate_second {
+      0% {
+        left: -150%;
+        width: 100%;
+      }
+
+      100% {
+        left: 100%;
+        width: 10%;
+      }
+    }
+  </style>
+
+  <!-- Flutter Web App -->
+  <script src="main.dart.js" type="application/javascript"></script>
+
+</body>
+
+</html>

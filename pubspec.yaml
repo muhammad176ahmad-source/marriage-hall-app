@@ -1,0 +1,51 @@
+name: marriage_haal
+description: Marriage Hall Booking App
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.5
+  # url_launcher: ^6.0.9
+  intl: ^0.17.0
+  shared_preferences: ^2.0.15
+  flutter_secure_storage: ^5.0.2
+  google_fonts: ^8.0.1
+  # carousel_slider: ^4.2.1
+  carousel_slider: ^5.0.0
+  share_plus: 12.0.1
+  cross_file: ^0.3.2
+  url_launcher: ^6.2.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/slide1.jpg
+    - assets/images/slide2.jpg
+    - assets/images/slide3.jpg
+    - assets/images/background.jpg
+    - assets/images/hall1.jpg
+    - assets/images/hall2.jpg
+    - assets/images/jungle.jpg
+    - assets/images/halls/hall3.jpg
+    - assets/images/mehndi.jpg
+    - assets/hall3.jpg
+    - assets/images/hall2.jpg
+    - assets/images/barat.jpg
+    - assets/images/walima.jpg
+    - assets/images/mehfil.jpg
+    - assets/images/others.jpg
+    - assets/images/halls/hall1.jpg
+    - assets/images/halls/hall2.jpg
+    - assets/hall1.jpg
+    - assets/hall2.jpg
+    - assets/images/home_bg.jpg
+    - assets/sounds/tap.mp3
