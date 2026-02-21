@@ -1,9 +1,8 @@
-// ... baki imports wahi
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart' hide CarouselController;
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math';
-import 'dart:async';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -14,70 +13,54 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with TickerProviderStateMixin {
-  bool showUserOwnerButtons = true; // Show buttons immediately
-  bool showBanner = false;
-
-  late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
   late AnimationController _buttonShineController;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  final List<Firework> fireworks = [];
+  final List<Particle> particles = [];
+  Timer? _particleTimer;
   final Random random = Random();
-
-  Timer? _fireworkTimer;
-  Timer? _bannerTimer;
 
   @override
   void initState() {
     super.initState();
 
-    _slideController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 800));
-    _slideAnimation = Tween<Offset>(begin: const Offset(-1.5, 0), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
-    _slideController.forward();
-
+    // Button shine animation
     _buttonShineController = AnimationController(
         vsync: this, duration: const Duration(seconds: 2))
       ..repeat(reverse: true);
 
+    // Fade animation for buttons
     _fadeController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 600));
     _fadeAnimation =
         CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
-    _fadeController.forward(); // Fade in buttons immediately
+    _fadeController.forward();
 
-    _fireworkTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
+    // Particle background timer
+    _particleTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
       final size = MediaQuery.of(context).size;
-      if (fireworks.length < 20) {
-        fireworks.add(Firework(random, size));
+      if (particles.length < 100) {
+        particles.add(Particle(
+            Offset(random.nextDouble() * size.width,
+                random.nextDouble() * size.height),
+            1 + random.nextDouble() * 2,
+            0.5 + random.nextDouble()));
       }
-      for (var f in fireworks) {
-        f.update();
-      }
-      fireworks.removeWhere((f) => f.exploded && f.explodeRadius <= 1);
+      for (var p in particles) p.update(size);
       setState(() {});
-    });
-
-    _bannerTimer = Timer(const Duration(seconds: 3), () {
-      setState(() {
-        showBanner = true;
-      });
     });
   }
 
   @override
   void dispose() {
-    _slideController.dispose();
     _buttonShineController.dispose();
     _fadeController.dispose();
-    _fireworkTimer?.cancel();
-    _bannerTimer?.cancel();
+    _particleTimer?.cancel();
     super.dispose();
   }
 
+  // ================= Glass / Shining Buttons =================
   Widget glassButton(String title, IconData icon, VoidCallback onTap) {
     return AnimatedBuilder(
       animation: _buttonShineController,
@@ -88,39 +71,47 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           child: Transform.translate(
             offset: Offset(0, -2 * shine),
             child: Container(
-              width: 250,
-              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 280,
+              margin: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(35),
                 border: Border.all(
-                    color: Colors.white.withOpacity(0.4 + 0.3 * shine),
-                    width: 2),
+                  color: Colors.white.withOpacity(0.4 + 0.3 * shine),
+                  width: 2,
+                ),
                 gradient: LinearGradient(
                   colors: [
-                    Colors.amber.withOpacity(0.3),
-                    Colors.orange.withOpacity(0.15),
+                    Colors.white.withOpacity(0.1 + 0.05 * shine),
+                    Colors.white.withOpacity(0.05 + 0.05 * shine),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.amber.withOpacity(0.4),
-                    blurRadius: 18,
-                    offset: const Offset(3, 8),
+                    color: Colors.black.withOpacity(0.3 + 0.2 * shine),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(vertical: 18),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(icon, color: Colors.white),
                   const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: GoogleFonts.robotoMono(
+                  Expanded(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.robotoMono(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white),
+                        color: Colors.white,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -139,117 +130,82 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       backgroundColor: Colors.black87,
       body: Stack(
         children: [
-          // ================= Background =================
-          SizedBox.expand(
-            child: Image.asset('assets/images/background.jpg',
-                fit: BoxFit.cover),
+          // ================= Fullscreen Carousel Slider =================
+          SizedBox(
+            height: size.height,
+            width: size.width,
+            child: CarouselSlider(
+              options: CarouselOptions(
+                height: size.height,
+                autoPlay: true,
+                enlargeCenterPage: true,
+                viewportFraction: 1.0,
+                autoPlayInterval: const Duration(seconds: 3),
+              ),
+              items: [
+                'assets/images/slide1.jpg',
+                'assets/images/slide2.jpg',
+                'assets/images/slide3.jpg',
+              ].map((imagePath) {
+                return SizedBox(
+                  width: size.width,
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-          Container(color: Colors.black.withOpacity(0.3)),
 
-          // ================= Fireworks =================
+          // ================= Floating Particles =================
           Positioned.fill(
             child: CustomPaint(
-              painter: FireworkPainter(fireworks),
+              painter: ParticlePainter(particles),
             ),
           ),
 
-          // ================= Banner =================
-          if (showBanner)
-            Positioned(
-              top: 60,
-              left: 30,
-              right: 30,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text(
-                    "🎉 Happy Marriage Ceremony 🎉",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
+          // ================= Top Banner Text =================
+          Positioned(
+            top: 80,
+            left: 20,
+            right: 20,
+            child: Text(
+              "Love, laughter, and happily ever after",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.pacifico(
+                fontSize: size.width * 0.07,
+                color: Colors.white,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.6),
+                    offset: const Offset(2, 2),
+                    blurRadius: 4,
                   ),
-                ),
+                  Shadow(
+                    color: Colors.black.withOpacity(0.3),
+                    offset: const Offset(-1, -1),
+                    blurRadius: 2,
+                  ),
+                ],
               ),
             ),
+          ),
 
-          // ================= Centered Content =================
-          Center(
-            child: SingleChildScrollView(
+          // ================= Bottom Buttons =================
+          Positioned(
+            bottom: 60,
+            left: 0,
+            right: 0,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: Text(
-                      "Welcome to Marriage Hall",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.pacifico(
-                          fontSize: size.width * 0.08,
-                          color: Colors.white),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // ================= Carousel Slider =================
-                  SizedBox(
-                    height: size.height * 0.28,
-                    child: CarouselSlider(
-                      options: CarouselOptions(
-                        autoPlay: true,
-                        enlargeCenterPage: true,
-                        viewportFraction: 0.85,
-                        autoPlayInterval: const Duration(seconds: 3),
-                      ),
-                      items: [
-                        'assets/images/slide1.jpg',
-                        'assets/images/slide2.jpg',
-                        'assets/images/slide3.jpg',
-                      ].map((imagePath) {
-                        return Container(
-                          margin:
-                              const EdgeInsets.symmetric(horizontal: 6),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.6),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(25),
-                            child: Image.asset(
-                              imagePath,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 30),
-
-                  // ================= User & Owner Buttons =================
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      children: [
-                        glassButton("User", Icons.person,
-                            () => Navigator.pushNamed(context, '/login')),
-                        glassButton("Owner", Icons.business,
-                            () => Navigator.pushNamed(context, '/ownerLogin')),
-                      ],
-                    ),
-                  ),
+                  glassButton(
+                      "User Account", Icons.person, () => Navigator.pushNamed(context, '/login')),
+                  glassButton(
+                      "Owner Account", Icons.business, () => Navigator.pushNamed(context, '/ownerLogin')),
                 ],
               ),
             ),
@@ -260,63 +216,31 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-// ================= FIREWORK MODEL =================
-class Firework {
+// ================= PARTICLE MODEL =================
+class Particle {
   Offset position;
+  double radius;
   double speed;
-  double explodeHeight;
-  double explodeRadius;
-  Color color;
-  bool exploded;
-  final Random random;
+  Particle(this.position, this.radius, this.speed);
 
-  Firework(this.random, Size size)
-      : position = Offset(random.nextDouble() * size.width, size.height),
-        speed = 6 + random.nextDouble() * 4,
-        explodeHeight = 100 + random.nextDouble() * 200,
-        explodeRadius = 40 + random.nextDouble() * 40,
-        exploded = false,
-        color = [
-          Colors.red,
-          Colors.white,
-          Colors.blue
-        ][random.nextInt(3)].withOpacity(0.95);
-
-  void update() {
-    if (!exploded) {
-      position = Offset(position.dx, position.dy - speed);
-      if (position.dy <= explodeHeight) exploded = true;
-    } else {
-      explodeRadius *= 0.92;
+  void update(Size size) {
+    position = Offset(position.dx, position.dy - speed);
+    if (position.dy < 0) {
+      position = Offset(Random().nextDouble() * size.width, size.height);
     }
   }
 }
 
-// ================= FIREWORK PAINTER =================
-class FireworkPainter extends CustomPainter {
-  final List<Firework> fireworks;
-
-  FireworkPainter(this.fireworks);
+// ================= PARTICLE PAINTER =================
+class ParticlePainter extends CustomPainter {
+  final List<Particle> particles;
+  ParticlePainter(this.particles);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    for (var f in fireworks) {
-      paint.color = f.color;
-
-      if (!f.exploded) {
-        canvas.drawCircle(f.position, 3, paint);
-      } else {
-        for (int i = 0; i < 16; i++) {
-          double angle = (i / 16) * 2 * pi;
-          double dx = f.position.dx + f.explodeRadius * cos(angle);
-          double dy = f.position.dy + f.explodeRadius * sin(angle);
-          canvas.drawLine(f.position, Offset(dx, dy), paint);
-        }
-      }
+    final paint = Paint()..color = Colors.white.withOpacity(0.2);
+    for (var p in particles) {
+      canvas.drawCircle(p.position, p.radius, paint);
     }
   }
 

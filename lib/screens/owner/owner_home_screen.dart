@@ -10,47 +10,28 @@ class OwnerHomeScreen extends StatefulWidget {
   State<OwnerHomeScreen> createState() => _OwnerHomeScreenState();
 }
 
-class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProviderStateMixin {
+class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
   final List<Hall> myHalls = [];
-
-  // Example Menus & Dishes
-  final Map<String, List<String>> menus = {
-    "Wedding Menu": ["Chicken Biryani", "Mutton Karahi", "Salad", "Dessert"],
-    "Birthday Menu": ["Pizza", "Burger", "Cake", "Fries"],
-    "Conference Menu": ["Sandwich", "Pasta", "Juice", "Coffee"],
-  };
-
-  final Map<String, List<bool>> selectedDishes = {};
-
   bool hallAdded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Initialize checkbox state
-    for (var menu in menus.keys) {
-      selectedDishes[menu] = List.filled(menus[menu]!.length, false);
-    }
-  }
+  TimeOfDay? selectedTime;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ===== BACKGROUND WALLPAPER =====
       body: Stack(
         children: [
+          // Background wallpaper
           SizedBox.expand(
             child: Image.asset(
-              "assets/images/wallpaper.jpg", // your wallpaper
+              "assets/images/wallpaper.jpg",
               fit: BoxFit.cover,
             ),
           ),
-          Container(color: Colors.black.withOpacity(0.25)), // subtle overlay
-
+          Container(color: Colors.black.withOpacity(0.25)),
           SafeArea(
             child: Column(
               children: [
-                // ===== TOP BAR =====
+                // Top bar
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
@@ -63,36 +44,52 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
                             fontSize: 24,
                             fontWeight: FontWeight.bold),
                       ),
-                      // Add Hall Button
                       ElevatedButton.icon(
+                        onPressed: () async {
+                          final result = await Navigator.push<Hall>(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AddHallScreen()),
+                          );
+
+                          if (result != null) {
+                            final TimeOfDay? time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+
+                            if (!mounted) return;
+
+                            setState(() {
+                              myHalls.add(result);
+                              hallAdded = true;
+                              selectedTime = time;
+                            });
+
+                            // Auto hide success banner
+                            Future.delayed(const Duration(seconds: 2), () {
+                              if (!mounted) return;
+                              setState(() => hallAdded = false);
+                            });
+
+                            // Show Invoice / Proposal
+                            _showInvoice(result);
+                          }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 16),
+                              vertical: 14, horizontal: 24),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                              borderRadius: BorderRadius.circular(20)),
+                          elevation: 6,
+                          shadowColor: Colors.black45,
                         ),
                         icon: const Icon(Icons.add, color: Colors.white),
                         label: const Text(
                           'Add Hall',
                           style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
-                        onPressed: () async {
-                          final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => const AddHallScreen()));
-                          if (result != null && result is Hall) {
-                            setState(() {
-                              myHalls.add(result);
-                              hallAdded = true;
-                            });
-                            Future.delayed(const Duration(seconds: 2), () {
-                              setState(() => hallAdded = false);
-                            });
-                          }
-                        },
                       ),
                     ],
                   ),
@@ -100,14 +97,13 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
 
                 const SizedBox(height: 10),
 
-                // ===== SUCCESS BANNER =====
                 if (hallAdded)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Container(
                       width: double.infinity,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: Colors.greenAccent.shade700,
                         borderRadius: BorderRadius.circular(12),
@@ -129,77 +125,12 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
                     ),
                   ),
 
-                const SizedBox(height: 10),
-
-                // ===== MENUS SLIDER =====
-                SizedBox(
-                  height: 180,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: menus.keys.length,
-                    itemBuilder: (context, index) {
-                      String menuName = menus.keys.elementAt(index);
-                      List<String> dishes = menus[menuName]!;
-
-                      return _menuCard(menuName, dishes);
-                    },
-                  ),
-                ),
-
                 const SizedBox(height: 12),
 
-                // ===== HALL LIST =====
                 Expanded(
                   child: myHalls.isEmpty ? _emptyState() : _hallList(),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===== MENU CARD WITH DISHES =====
-  Widget _menuCard(String menuName, List<String> dishes) {
-    return Container(
-      width: 220,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 6,
-            offset: const Offset(2, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(menuName,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              itemCount: dishes.length,
-              itemBuilder: (context, index) {
-                return CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(dishes[index], style: const TextStyle(fontSize: 14)),
-                  value: selectedDishes[menuName]![index],
-                  onChanged: (val) {
-                    setState(() {
-                      selectedDishes[menuName]![index] = val ?? false;
-                    });
-                  },
-                  controlAffinity: ListTileControlAffinity.leading,
-                );
-              },
             ),
           ),
         ],
@@ -214,7 +145,8 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
         children: const [
           Icon(Icons.home_work_outlined, size: 80, color: Colors.white70),
           SizedBox(height: 16),
-          Text('No halls added yet', style: TextStyle(fontSize: 18, color: Colors.white70)),
+          Text('No halls added yet',
+              style: TextStyle(fontSize: 18, color: Colors.white70)),
           SizedBox(height: 6),
           Text('Tap "Add Hall" to add your wedding hall',
               style: TextStyle(color: Colors.white70)),
@@ -231,8 +163,10 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
         final hall = myHalls[index];
         return GestureDetector(
           onTap: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => HallPreviewScreen(hall: hall)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => HallPreviewScreen(hall: hall)),
+            );
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -300,6 +234,136 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> with SingleTickerProv
           ),
         );
       },
+    );
+  }
+
+  void _showInvoice(Hall hall) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade800, Colors.purpleAccent.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(4, 6)),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade900.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: const [
+                    Text(
+                      "Marriage Hall Proposal",
+                      style: TextStyle(
+                          fontSize: 22,
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Professional Booking Summary",
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Column(
+                children: [
+                  _proposalRow("Hall Name", hall.name),
+                  _proposalRow("Location", hall.location),
+                  _proposalRow("Price / Day", "${hall.price}"),
+                  _proposalRow(
+                      "Event Time",
+                      selectedTime != null
+                          ? selectedTime!.format(context)
+                          : "--"),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.download),
+                    label: const Text("Download"),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14))),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.share),
+                    label: const Text("Share"),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.greenAccent.shade700,
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 18),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14))),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _proposalRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500)),
+            Text(value,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -32,20 +32,46 @@ flutter:
     - assets/images/slide2.jpg
     - assets/images/slide3.jpg
     - assets/images/background.jpg
-    - assets/images/hall1.jpg
-    - assets/images/hall2.jpg
     - assets/images/jungle.jpg
     - assets/images/halls/hall3.jpg
+    - assets/images/wallpaper.jpg
+    - assets/images/home_bg.jpg
+    - assets/sounds/tap.mp3
+
+    # ===== Home Background =====
+    - assets/images/home_bg.jpg
+
+    # ===== Dishes (Food + Drinks) =====
+    - assets/images/dishes/aloo_finger.jpg
+    - assets/images/dishes/chili_paneer.jpg
+    - assets/images/dishes/hakka_noodles.jpg
+    - assets/images/dishes/channa_masala.jpg
+    - assets/images/dishes/butter_chicken.jpg
+    - assets/images/dishes/palak_chicken.jpg
+    - assets/images/dishes/gulab_jamun.jpg
+    - assets/images/dishes/kheer.jpg
+    - assets/images/dishes/gajar_ka_halwa.jpg
+    - assets/images/dishes/coke.jpg
+    - assets/images/dishes/pepsi.jpg
+    - assets/images/dishes/lassi.jpg
+
+    # ===== Cities =====
+    - assets/images/cities/islamabad.jpg
+    - assets/images/cities/lahore.jpg
+    - assets/images/cities/karachi.jpg
+    - assets/images/cities/faisalabad.jpg
+    - assets/images/cities/rawalpindi.jpg
+
+    # ===== Halls =====
+    - assets/images/halls/hall1.jpg
+    - assets/images/halls/hall2.jpg
+    - assets/images/halls/hall3.jpg
+    - assets/images/halls/hall4.jpg
+
+    # ===== Functions =====
     - assets/images/mehndi.jpg
-    - assets/hall3.jpg
-    - assets/images/hall2.jpg
     - assets/images/barat.jpg
     - assets/images/walima.jpg
     - assets/images/mehfil.jpg
     - assets/images/others.jpg
-    - assets/images/halls/hall1.jpg
-    - assets/images/halls/hall2.jpg
-    - assets/hall1.jpg
-    - assets/hall2.jpg
-    - assets/images/home_bg.jpg
-    - assets/sounds/tap.mp3
+
