@@ -1,8 +1,6 @@
-// ================== Imports ==================
 import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -10,12 +8,115 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:cross_file/cross_file.dart';
+
 import 'advanced_function_booking_screen.dart';
-import 'menu_screen.dart';
 import 'booking_screen.dart';
 import 'booking_confirmation_screen.dart';
+import 'category_screen.dart';
 
-// ================== HomeScreen ==================
+// ==================== Grouped Data ====================
+
+final Map<String, List<String>> groupedDishes = {
+  "Sweet": [
+    "Gulab Jamun","Kheer","Gajar Ka Halwa","Ras Malai","Barfi","Jalebi","Sooji Ka Halwa","Phirni","Malai Kulfi","Seviyan",
+    "Rabri","Ladoo","Mysore Pak","Besan Barfi","Chocolate Cake","Brownie","Carrot Halwa","Peda","Kulfi Falooda","Anjeer Halwa",
+  ],
+  "Salt": [
+    "Aloo Finger","Chili Paneer","Hakka Noodles","Channa Masala","Veg Biryani","Chicken Biryani","Nihari","Pakora","Samosa","Paneer Tikka",
+    "Aloo Tikki","Chana Chaat","Veg Cutlet","Corn Chaat","Stuffed Capsicum","Dhokla","Idli","Vada","Bhel Puri","Paneer Pakora",
+  ],
+  "BBQ": [
+    "Butter Chicken","Palak Chicken","Seekh Kabab","Tandoori Chicken","BBQ Ribs","Chapli Kebab","Mutton Chops","Grilled Fish","Chicken Wings","Beef Ribs",
+    "Tikka","Barbecue Prawns","Malai Tikka","Chicken Malai Boti","Reshmi Kabab","BBQ Lamb","Chicken Fry","Chicken Malai Tikka","BBQ Chicken Pizza","Mutton Biryani BBQ",
+  ],
+  "Drinks": [
+    "Cold Drink","Fresh Juice","Mineral Water","Tea","Coffee","Lassi","Sharbat","Ayran","Mint Mojito","Lemonade","Mango Shake","Banana Shake","Fruit Punch","Iced Tea","Coconut Water","Chai Latte","Espresso","Cappuccino","Green Tea","Herbal Tea",
+  ],
+};
+
+// Dish Images
+final Map<String, String> dishImages = {
+  "Gulab Jamun": "assets/images/dishes/gulab_jamun.jpg",
+  "Kheer": "assets/images/dishes/kheer.jpg",
+  "Gajar Ka Halwa": "assets/images/dishes/gajar_ka_halwa.jpg",
+  "Ras Malai": "assets/images/dishes/ras_malai.jpg",
+  "Barfi": "assets/images/dishes/barfi.jpg",
+  "Jalebi": "assets/images/dishes/jalebi.jpg",
+  "Sooji Ka Halwa": "assets/images/dishes/sooji_ka_halwa.jpg",
+  "Aloo Finger": "assets/images/dishes/aloo_finger.jpg",
+  "Chili Paneer": "assets/images/dishes/chili_paneer.jpg",
+  "Hakka Noodles": "assets/images/dishes/hakka_noodles.jpg",
+  "Channa Masala": "assets/images/dishes/channa_masala.jpg",
+  "Veg Biryani": "assets/images/dishes/veg_biryani.jpg",
+  "Chicken Biryani": "assets/images/dishes/chicken_biryani.jpg",
+  "Nihari": "assets/images/dishes/nihari.jpg",
+  "Butter Chicken": "assets/images/dishes/butter_chicken.jpg",
+  "Palak Chicken": "assets/images/dishes/palak_chicken.jpg",
+  "Seekh Kabab": "assets/images/dishes/seekh_kabab.jpg",
+  "Tandoori Chicken": "assets/images/dishes/tandoori_chicken.jpg",
+  "BBQ Ribs": "assets/images/dishes/bbq_ribs.jpg",
+  "Chapli Kebab": "assets/images/dishes/chapli_kebab.jpg",
+  "Cold Drink": "assets/images/dishes/cold_drink.jpg",
+  "Fresh Juice": "assets/images/dishes/fresh_juice.jpg",
+  "Mineral Water": "assets/images/dishes/mineral_water.jpg",
+  "Tea": "assets/images/dishes/tea.jpg",
+  "Coffee": "assets/images/dishes/coffee.jpg",
+  "Lassi": "assets/images/dishes/lassi.jpg",
+  "Sharbat": "assets/images/dishes/sharbat.jpg",
+};
+
+// Cities - 50 cities, grouped by province
+final Map<String, List<String>> groupedCities = {
+  "Punjab": [
+    "Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Sargodha","Bahawalpur","Sahiwal","Dera Ghazi Khan",
+    "Jhang","Gujrat","Pakpattan","Rahim Yar Khan","Mianwali","Narowal","Fazilka","Khushab","Chiniot","Attock",
+  ],
+  "KPK": [
+    "Peshawar","Mardan","Abbottabad","Swabi","Mansehra","Charsadda","Nowshera","Bannu","Dera Ismail Khan","Kohat",
+    "Haripur","Swat","Batkhela","Malakand","Buner","Chitral","Dir","Torghar","Mingora","Karak",
+  ],
+  "Sindh": [
+    "Karachi","Hyderabad","Sukkur","Larkana","Shaheed Benazirabad","Mirpur Khas","Nawabshah","Khairpur","Jacobabad","Dadu",
+    "Badin","Tando Allahyar","Tando Muhammad Khan","Ghotki","Shikarpur","Umerkot","Sanghar","Matiari","Jamshoro","Naushahro Feroze",
+  ],
+  "Balochistan": [
+    "Quetta","Gwadar","Turbat","Khuzdar","Zhob","Sibi","Bela","Pasni","Jaffarabad","Kalat",
+    "Lasbela","Mastung","Pishin","Chagai","Kharan","Panjgur","Kohlu","Nushki","Kech","Dera Bugti",
+  ],
+};
+
+// City Images (sample)
+final Map<String, String> cityImages = {
+  "Lahore": "assets/images/cities/lahore.jpg",
+  "Karachi": "assets/images/cities/karachi.jpg",
+  "Islamabad": "assets/images/cities/islamabad.jpg",
+  "Faisalabad": "assets/images/cities/faisalabad.jpg",
+  "Peshawar": "assets/images/cities/peshawar.jpg",
+};
+
+// Functions - 20 types
+final List<String> functionsList = [
+  "Mehndi","Barat","Walima","Mehfil","Engagement","Shadi","Birthday Party","Baby Shower","Corporate Event",
+  "Exhibition","Workshop","Seminar","Farewell","Reception","Valima","Anniversary","Housewarming","Sangeet","Dinner Party","Cocktail Party"
+];
+
+// Function Images (sample)
+final Map<String, String> functionImages = {
+  "Mehndi": "assets/images/functions/mehndi.jpg",
+  "Barat": "assets/images/functions/barat.jpg",
+  "Walima": "assets/images/functions/walima.jpg",
+};
+
+// Available Halls
+final List<Map<String, dynamic>> availableHalls = [
+  {"name": "Royal Marriage Hall", "city": "Islamabad", "status": "Available", "image": "assets/images/halls/hall1.jpg", "menu": ["Aloo Finger", "Butter Chicken"]},
+  {"name": "Grand Palace", "city": "Lahore", "status": "Booked", "image": "assets/images/halls/hall2.jpg", "menu": ["Channa Masala", "Gulab Jamun"]},
+  {"name": "Regal Banquet", "city": "Karachi", "status": "Available", "image": "assets/images/halls/hall3.jpg", "menu": ["Palak Chicken", "Hakka Noodles"]},
+  {"name": "Golden Venue", "city": "Faisalabad", "status": "Available", "image": "assets/images/halls/hall4.jpg", "menu": ["Chili Paneer", "Kheer"]},
+  {"name": "Pearl Continental", "city": "Peshawar", "status": "Available", "image": "assets/images/halls/hall5.jpg", "menu": ["Chapli Kebab", "Sooji Ka Halwa"]},
+];
+
+// ==================== Home Screen ====================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,128 +126,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final Random _random = Random();
-
-  final List<String> functions = ['Mehndi', 'Barat', 'Walima', 'Mehfil', 'Others'];
-  final List<String> mainFunctions = ['Mehndi & Barat', 'Walima', 'Mehfil', 'Others'];
-  int selectedFunctionIndex = 0;
-
-  final List<Map<String, dynamic>> dishes = [
-    {"name":"Aloo Finger", "image":"assets/images/dishes/aloo_finger.jpg"},
-    {"name":"Chili Paneer", "image":"assets/images/dishes/chili_paneer.jpg"},
-    {"name":"Hakka Noodles", "image":"assets/images/dishes/hakka_noodles.jpg"},
-    {"name":"Channa Masala", "image":"assets/images/dishes/channa_masala.jpg"},
-    {"name":"Butter Chicken", "image":"assets/images/dishes/butter_chicken.jpg"},
-    {"name":"Palak Chicken", "image":"assets/images/dishes/palak_chicken.jpg"},
-    {"name":"Gulab Jamun", "image":"assets/images/dishes/gulab_jamun.jpg"},
-    {"name":"Kheer", "image":"assets/images/dishes/kheer.jpg"},
-    {"name":"Gajar Ka Halwa", "image":"assets/images/dishes/gajar_ka_halwa.jpg"},
-    {"name":"Cold Drink", "image":"assets/images/dishes/cold_drink.jpg"},
-    {"name":"Fresh Juice", "image":"assets/images/dishes/fresh_juice.jpg"},
-    {"name":"Mineral Water", "image":"assets/images/dishes/mineral_water.jpg"},
-    {"name":"Tea", "image":"assets/images/dishes/tea.jpg"},
-    {"name":"Coffee", "image":"assets/images/dishes/coffee.jpg"},
-  ];
-
-  final List<Map<String, dynamic>> cities = [
-    {"name":"Islamabad","image":"assets/images/cities/islamabad.jpg"},
-    {"name":"Lahore","image":"assets/images/cities/lahore.jpg"},
-    {"name":"Karachi","image":"assets/images/cities/karachi.jpg"},
-    {"name":"Faisalabad","image":"assets/images/cities/faisalabad.jpg"},
-    {"name":"Rawalpindi","image":"assets/images/cities/rawalpindi.jpg"},
-  ];
-
-  final List<Map<String, dynamic>> availableHalls = [
-    {"name": "Royal Marriage Hall", "city": "Islamabad", "status": "Available", "image":"assets/images/halls/hall1.jpg", "menu":["Aloo Finger","Butter Chicken"]},
-    {"name": "Grand Palace", "city": "Lahore", "status": "Booked", "image":"assets/images/halls/hall2.jpg", "menu":["Channa Masala","Gulab Jamun"]},
-    {"name": "Regal Banquet", "city": "Karachi", "status": "Available", "image":"assets/images/halls/hall3.jpg", "menu":["Palak Chicken","Hakka Noodles"]},
-    {"name": "Golden Venue", "city": "Faisalabad", "status": "Available", "image":"assets/images/halls/hall4.jpg", "menu":["Chili Paneer","Kheer"]},
-  ];
-
   List<String> selectedDishes = [];
-  String selectedCity = '';
   String selectedHallName = '';
-  List<ConfettiParticle> _confetti = [];
 
-  String location = '';
-  TimeOfDay selectedTime = TimeOfDay.now();
+  double responsiveWidth(BuildContext context, double percentage) =>
+      MediaQuery.of(context).size.width * percentage;
 
-  List<Widget> get _pages => [
-        _buildHomePage(),
-        _buildFunctionsPage(),
-        _buildProposalPage(),
-        _buildProfilePage(),
-      ];
+  double responsiveHeight(BuildContext context, double percentage) =>
+      MediaQuery.of(context).size.height * percentage;
 
-  List<Map<String, dynamic>> get filteredHalls {
-    return availableHalls.where((hall) {
-      bool matchesCity = selectedCity.isEmpty || hall["city"] == selectedCity;
-      bool matchesDishes = selectedDishes.isEmpty || selectedDishes.any((d) => hall["menu"].contains(d));
-      bool isAvailable = hall["status"] == "Available";
-      return matchesCity && matchesDishes && isAvailable;
-    }).toList();
+  double responsiveFont(BuildContext context, double percentage) =>
+      MediaQuery.of(context).size.width * (percentage / 100);
+
+  Widget _getPage(int index) {
+    switch (index) {
+      case 0:
+        return _buildHomePage();
+      case 1:
+        return const Center(child: Text("Functions Page"));
+      case 2:
+        return const Center(child: Text("Proposal Page"));
+      case 3:
+        return const Center(child: Text("Profile Page"));
+      default:
+        return _buildHomePage();
+    }
   }
 
-  void _onFunctionTap(int index, Offset tapPosition) {
-    selectedFunctionIndex = index;
-    _confetti = List.generate(
-      20,
-      (_) => ConfettiParticle(
-        position: tapPosition,
-        color: Colors.primaries[_random.nextInt(Colors.primaries.length)],
-        radius: 3 + _random.nextDouble() * 3,
-        dx: (_random.nextDouble() - 0.5) * 4,
-        dy: -2 + -_random.nextDouble() * 4,
-      ),
-    );
-    setState(() {});
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => _confetti.clear());
-    });
-
-    showDialog(
-      context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text("${mainFunctions[index]} Booking Options"),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: ListView(
-                shrinkWrap: true,
-                children: availableHalls.map((hall) {
-                  bool isSelected = selectedHallName == hall['name'];
-                  return CheckboxListTile(
-                    title: Text("${hall['name']} (${hall['city']})"),
-                    subtitle: Text("Status: ${hall['status']}"),
-                    value: isSelected,
-                    onChanged: (val) {
-                      setState(() {
-                        if(val==true) selectedHallName = hall['name'];
-                        else selectedHallName = '';
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: ()=>Navigator.pop(context), child: const Text("Close")),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ================= Responsive Sizes =================
-  double screenWidth(BuildContext context) => MediaQuery.of(context).size.width;
-  double screenHeight(BuildContext context) => MediaQuery.of(context).size.height;
-  double responsiveWidth(BuildContext context, double fraction) => screenWidth(context) * fraction;
-  double responsiveHeight(BuildContext context, double fraction) => screenHeight(context) * fraction;
-  double responsiveFont(BuildContext context, double base) => base * screenWidth(context)/360;
-
-  // ================= Pages =================
   Widget _buildHomePage() {
     return SingleChildScrollView(
       child: Padding(
@@ -154,165 +160,135 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             SizedBox(height: responsiveHeight(context, 0.02)),
-            _buildFunctionMenu(),
-            SizedBox(height: responsiveHeight(context, 0.02)),
-            _buildFolderCard("Menus", dishes.map((d)=>_buildMenuCard(d)).toList(), selectAll: true, height: responsiveHeight(context,0.25)),
-            _buildFolderCard("Cities", cities.map((c)=>_buildCityCard(c)).toList(), selectAll: true, height: responsiveHeight(context,0.2)),
-            _buildFolderCard("Available Halls", filteredHalls.map((h)=>_buildHallCard(h)).toList(), height: responsiveHeight(context,0.3)),
-            SizedBox(height: responsiveHeight(context, 0.02)),
-            SizedBox(
-              width: double.infinity,
-              height: responsiveHeight(context, 0.06),
-              child: ElevatedButton(
-                onPressed: () {
-                  if (selectedHallName.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Please select a hall first")),
-                    );
-                    return;
-                  }
-                  final selectedHall = availableHalls.firstWhere((hall) => hall["name"] == selectedHallName);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AdvancedFunctionBookingScreen(
-                        hall: {
-                          ...selectedHall,
-                          "location": selectedHall["city"],
-                          "price": 250000,
-                          "capacity": 500,
-                          "perHeadRate": 2500,
-                          "facilities": ["AC","Parking","Lighting","Catering","Stage Decoration"],
-                          "images": ["https://via.placeholder.com/600x300","https://via.placeholder.com/600x300"],
-                        },
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            _buildTopImageCards(),
+            SizedBox(height: responsiveHeight(context, 0.05)),
+            GestureDetector(
+              onTap: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
+                  ? _onNextPressed
+                  : null,
+              child: Container(
+                height: responsiveHeight(context, 0.07),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  gradient: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
+                      ? LinearGradient(
+                          colors: [Colors.redAccent.shade700, Colors.deepOrangeAccent.shade400],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : LinearGradient(
+                          colors: [Colors.grey.shade400, Colors.grey.shade500],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  boxShadow: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
+                      ? [BoxShadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 4))]
+                      : [],
                 ),
-                child: Text("Next Screen", style: TextStyle(fontSize: responsiveFont(context,16), color: Colors.white)),
+                alignment: Alignment.center,
+                child: Text(
+                  "Next",
+                  style: TextStyle(
+                    fontSize: responsiveFont(context, 18),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
               ),
             ),
-            SizedBox(height: responsiveHeight(context,0.05)),
+            SizedBox(height: responsiveHeight(context, 0.05)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFunctionsPage() => Center(child: Text("Functions Page", style: TextStyle(fontSize: responsiveFont(context,24))));
-  Widget _buildProposalPage() => Center(child: Text("Proposal Page", style: TextStyle(fontSize: responsiveFont(context,24))));
-  Widget _buildProfilePage() => Center(child: Text("Profile Page", style: TextStyle(fontSize: responsiveFont(context,24))));
-
-  // ================= Proposal Dialog =================
-  void _showProposalDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Send a Proposal"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("Do you want to send a proposal to the selected hall?"),
-              SizedBox(height: responsiveHeight(context, 0.02)),
-              Text(selectedHallName.isEmpty
-                  ? "No hall selected!"
-                  : "Selected Hall: $selectedHallName",
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                if(selectedHallName.isEmpty){
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select a hall first")),
-                  );
-                  return;
-                }
-                // Add proposal sending logic here
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Proposal sent to $selectedHallName!")),
-                );
-              },
-              child: const Text("Send"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // ================= Function Menu =================
-  Widget _buildFunctionMenu() {
-    return SizedBox(
-      height: responsiveHeight(context,0.07),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.03)),
-        itemCount: mainFunctions.length,
-        itemBuilder: (context, index) {
-          bool isSelected = selectedFunctionIndex == index;
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.015)),
-            child: ElevatedButton(
-              onPressed: () {
-                RenderBox box = context.findRenderObject() as RenderBox;
-                Offset pos = box.localToGlobal(Offset.zero);
-                if (mainFunctions[index] == 'Mehndi & Barat') selectedFunctionIndex = 0;
-                else selectedFunctionIndex = functions.indexOf(mainFunctions[index]);
-                _onFunctionTap(selectedFunctionIndex, pos);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? Colors.purple : Colors.grey.shade400,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.04)),
+  Widget _buildTopImageCards() {
+    return Column(
+      children: [
+        _buildImageCard("Menus", "assets/images/menu_background.jpg", () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryScreen(
+                title: "Menus",
+                groupedItems: groupedDishes,
+                itemImages: dishImages,
               ),
-              child: Text(mainFunctions[index], style: TextStyle(fontSize: responsiveFont(context,16))),
             ),
           );
-        },
-      ),
+        }),
+        _buildImageCard("Cities", "assets/images/cities_background.jpg", () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryScreen(
+                title: "Cities",
+                groupedItems: groupedCities,
+                itemImages: cityImages,
+              ),
+            ),
+          );
+        }),
+        _buildImageCard("Functions", "assets/images/functions_background.jpg", () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryScreen(
+                title: "Functions",
+                items: functionsList,
+                itemImages: functionImages,
+              ),
+            ),
+          );
+        }),
+        _buildImageCard("Available Halls", "assets/images/halls_background.jpg", () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryScreen(
+                title: "Available Halls",
+                items: availableHalls.map((h) => h["name"].toString()).toList(),
+                itemImages: {for (var hall in availableHalls) hall["name"].toString(): hall["image"].toString()},
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
-  // ================= Hall, Menu, City Cards =================
-  Widget _buildHallCard(Map<String,dynamic> hall) {
-    bool isSelected = selectedHallName == hall['name'];
+  Widget _buildImageCard(String title, String background, VoidCallback onTap) {
     return GestureDetector(
-      onTap: (){ setState(()=>selectedHallName = isSelected ? '' : hall['name']); },
+      onTap: onTap,
       child: Container(
-        width: responsiveWidth(context,0.45),
-        margin: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.02), vertical: responsiveHeight(context,0.01)),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: isSelected ? Colors.yellowAccent : Colors.grey.shade300, width: 2),
-          image: DecorationImage(image: AssetImage(hall["image"]), fit: BoxFit.cover),
-        ),
+        height: responsiveHeight(context, 0.22),
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(vertical: 10),
         child: Stack(
           children: [
-            if(isSelected) Positioned(top: 8, right: 8, child: CircleAvatar(radius: 12, backgroundColor: Colors.yellowAccent, child: Icon(Icons.check, size: 16, color: Colors.black))),
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Container(
-                padding: EdgeInsets.all(responsiveWidth(context,0.02)),
-                color: Colors.black54,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(hall["name"], style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: responsiveFont(context,14))),
-                    Text(hall["city"], style: TextStyle(color: Colors.white70, fontSize: responsiveFont(context,12))),
-                    Text(hall["status"], style: TextStyle(color: hall["status"]=="Available"? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: responsiveFont(context,12))),
-                  ],
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset(background, fit: BoxFit.cover, width: double.infinity),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  alignment: Alignment.center,
+                  color: Colors.black.withOpacity(0.3),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: responsiveFont(context, 8),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
@@ -322,155 +298,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMenuCard(Map<String, dynamic> dish) {
-    bool isSelected = selectedDishes.contains(dish["name"]);
-    return GestureDetector(
-      onTap: () => setState(()=>isSelected?selectedDishes.remove(dish["name"]):selectedDishes.add(dish["name"])),
-      child: Container(
-        width: responsiveWidth(context,0.3),
-        margin: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.015)),
-        padding: EdgeInsets.all(responsiveWidth(context,0.02)),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected? Colors.green : Colors.grey.shade300, width: 2),
-          color: Colors.white,
-        ),
-        child: Column(
-          children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(dish["image"], width: responsiveWidth(context,0.2), height: responsiveWidth(context,0.2), fit: BoxFit.cover)),
-            SizedBox(height: responsiveHeight(context,0.01)),
-            Text(dish["name"], textAlign: TextAlign.center, style: TextStyle(fontSize: responsiveFont(context,12))),
-          ],
+  void _onNextPressed() {
+    final selectedHall = availableHalls.firstWhere((hall) => hall["name"] == selectedHallName);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdvancedFunctionBookingScreen(
+          hall: {
+            ...selectedHall,
+            "location": selectedHall["city"],
+            "price": 250000,
+            "capacity": 500,
+            "perHeadRate": 2500,
+            "facilities": ["AC","Parking","Lighting","Catering","Stage Decoration"],
+            "images": ["https://via.placeholder.com/600x300","https://via.placeholder.com/600x300"],
+          },
+          selectedDishes: selectedDishes,
         ),
       ),
     );
-  }
-
-  Widget _buildCityCard(Map<String, dynamic> city) {
-    bool isSelected = selectedCity == city["name"];
-    return GestureDetector(
-      onTap: () => setState(()=>selectedCity=city["name"]),
-      child: Container(
-        width: responsiveWidth(context,0.3),
-        margin: EdgeInsets.symmetric(horizontal: responsiveWidth(context,0.015)),
-        padding: EdgeInsets.all(responsiveWidth(context,0.02)),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected? Colors.blue : Colors.grey.shade300, width: 2),
-          color: Colors.white,
-        ),
-        child: Column(
-          children: [
-            ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset(city["image"], width: responsiveWidth(context,0.2), height: responsiveWidth(context,0.2), fit: BoxFit.cover)),
-            SizedBox(height: responsiveHeight(context,0.01)),
-            Text(city["name"], textAlign: TextAlign.center, style: TextStyle(fontSize: responsiveFont(context,12))),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFolderCard(String title, List<Widget> children, {double height = 120, bool selectAll=false}) {
-    return _FolderCard(title: title, items: children, height: height, selectAll: selectAll);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children:[
-          _pages[_selectedIndex],
-          if(_confetti.isNotEmpty) Positioned.fill(child: CustomPaint(painter: ConfettiPainter(_confetti))),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: ()=>_showProposalDialog(),
-        label: Text("Proposal Card", style: TextStyle(fontSize: responsiveFont(context,12))),
-        icon: Icon(Icons.card_giftcard, size: responsiveFont(context,16)),
-      ),
+      appBar: AppBar(title: const Text("Marriage Halls App")),
+      body: _getPage(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.purple,
         unselectedItemColor: Colors.grey,
-        onTap: (index)=>setState(()=>_selectedIndex=index),
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home, size: responsiveFont(context,20)), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.event, size: responsiveFont(context,20)), label: "Functions"),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard, size: responsiveFont(context,20)), label: "Proposal"),
-          BottomNavigationBarItem(icon: Icon(Icons.person, size: responsiveFont(context,20)), label: "Profile"),
-        ],
-      ),
-    );
-  }
-}
-
-// ================= Confetti =================
-class ConfettiParticle {
-  Offset position;
-  Color color;
-  double radius;
-  double dx;
-  double dy;
-  ConfettiParticle({required this.position, required this.color, required this.radius, required this.dx, required this.dy});
-}
-
-class ConfettiPainter extends CustomPainter {
-  final List<ConfettiParticle> particles;
-  ConfettiPainter(this.particles);
-  @override
-  void paint(Canvas canvas, Size size){
-    final paint = Paint()..style = PaintingStyle.fill;
-    for(var p in particles){
-      paint.color = p.color;
-      canvas.drawCircle(p.position,p.radius,paint);
-      p.position = Offset(p.position.dx+p.dx,p.position.dy+p.dy);
-      p.dy += 0.1;
-    }
-  }
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate)=>true;
-}
-
-// ================= Folder Card Widget =================
-class _FolderCard extends StatefulWidget {
-  final String title;
-  final double height;
-  final List<Widget> items;
-  final bool selectAll;
-  final VoidCallback? onSelectAll;
-  const _FolderCard({super.key, required this.title, required this.items, this.height=160, this.selectAll=false, this.onSelectAll});
-  @override State<_FolderCard> createState()=>_FolderCardState();
-}
-
-class _FolderCardState extends State<_FolderCard>{
-  bool isExpanded = true;
-  @override
-  Widget build(BuildContext context){
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width*0.03, vertical: 8),
-      child: Column(
-        children:[
-          ListTile(
-            title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: MediaQuery.of(context).size.width*0.045)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children:[
-                if(widget.selectAll) TextButton(onPressed: widget.onSelectAll, child: Text("Select All", style: TextStyle(fontSize: MediaQuery.of(context).size.width*0.035))),
-                Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
-              ],
-            ),
-            onTap: ()=>setState(()=>isExpanded=!isExpanded),
-          ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: SizedBox(
-              height: widget.height,
-              child: ListView(scrollDirection: Axis.horizontal, padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width*0.03), children: widget.items.map((w)=>Container(margin: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width*0.02), child: w)).toList()),
-            ),
-            crossFadeState: isExpanded? CrossFadeState.showSecond: CrossFadeState.showFirst,
-            duration: const Duration(milliseconds:300),
-          ),
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.event), label: "Functions"),
+          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: "Proposal"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
     );
