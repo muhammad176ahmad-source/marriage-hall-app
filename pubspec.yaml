@@ -19,6 +19,11 @@ dependencies:
   share_plus: 12.0.1
   cross_file: ^0.3.2
   url_launcher: ^6.2.5
+  # flutter_gifimage: ^3.0.0 # Add this line for GIF support
+  # flutter_animated_gif: ^1.0.0  # You can check for the latest version on pub.dev
+  # flutter_gifimage: ^2.0.0  # Correct version (latest available)
+  # flutter_gif: ^0.2.0
+  flutter_gif: ^0.0.4
 
 dev_dependencies:
   flutter_test:
@@ -40,38 +45,170 @@ flutter:
 
     # ===== Home Background =====
     - assets/images/home_bg.jpg
+    - assets/images/animated_background.gif
 
-    # ===== Dishes (Food + Drinks) =====
+    # ========== SWEET ==========
+    - assets/images/dishes/gulab_jamun.jpg
+    - assets/images/dishes/kheer.jpg
+    - assets/images/dishes/gajar_ka_halwa.jpg
+    - assets/images/dishes/ras_malai.jpg
+    - assets/images/dishes/barfi.jpg
+    - assets/images/dishes/jalebi.jpg
+    - assets/images/dishes/sooji_ka_halwa.jpg
+    - assets/images/dishes/phirni.jpg
+    - assets/images/dishes/malai_kulfi.jpg
+    - assets/images/dishes/seviyan.jpg
+    - assets/images/dishes/rabri.jpg
+    - assets/images/dishes/ladoo.jpg
+    - assets/images/dishes/mysore_pak.jpg
+    - assets/images/dishes/besan_barfi.jpg
+    - assets/images/dishes/chocolate_cake.jpg
+    - assets/images/dishes/brownie.jpg
+    - assets/images/dishes/carrot_halwa.jpg
+    - assets/images/dishes/peda.jpg
+    - assets/images/dishes/kulfi_falooda.jpg
+    - assets/images/dishes/anjeer_halwa.jpg
+
+    # ========== SALT ==========
     - assets/images/dishes/aloo_finger.jpg
     - assets/images/dishes/chili_paneer.jpg
     - assets/images/dishes/hakka_noodles.jpg
     - assets/images/dishes/channa_masala.jpg
+    - assets/images/dishes/veg_biryani.jpg
+    - assets/images/dishes/chicken_biryani.jpg
+    - assets/images/dishes/nihari.jpg
+    - assets/images/dishes/pakora.jpg
+    - assets/images/dishes/samosa.jpg
+    - assets/images/dishes/paneer_tikka.jpg
+    - assets/images/dishes/aloo_tikki.jpg
+    - assets/images/dishes/chana_chaat.jpg
+    - assets/images/dishes/veg_cutlet.jpg
+    - assets/images/dishes/corn_chaat.jpg
+    - assets/images/dishes/stuffed_capsicum.jpg
+    - assets/images/dishes/dhokla.jpg
+    - assets/images/dishes/idli.jpg
+    - assets/images/dishes/vada.jpg
+    - assets/images/dishes/bhel_puri.jpg
+    - assets/images/dishes/paneer_pakora.jpg
+
+    # ========== BBQ ==========
     - assets/images/dishes/butter_chicken.jpg
     - assets/images/dishes/palak_chicken.jpg
-    - assets/images/dishes/gulab_jamun.jpg
-    - assets/images/dishes/kheer.jpg
-    - assets/images/dishes/gajar_ka_halwa.jpg
-    - assets/images/dishes/coke.jpg
-    - assets/images/dishes/pepsi.jpg
-    - assets/images/dishes/lassi.jpg
+    - assets/images/dishes/seekh_kabab.jpg
+    - assets/images/dishes/tandoori_chicken.jpg
+    - assets/images/dishes/bbq_ribs.jpg
+    - assets/images/dishes/chapli_kebab.jpg
+    - assets/images/dishes/mutton_chops.jpg
+    - assets/images/dishes/grilled_fish.jpg
+    - assets/images/dishes/chicken_wings.jpg
+    - assets/images/dishes/beef_ribs.jpg
+    - assets/images/dishes/tikka.jpg
+    - assets/images/dishes/barbecue_prawns.jpg
+    - assets/images/dishes/malai_tikka.jpg
+    - assets/images/dishes/chicken_malai_boti.jpg
+    - assets/images/dishes/reshmi_kabab.jpg
+    - assets/images/dishes/bbq_lamb.jpg
+    - assets/images/dishes/chicken_fry.jpg
+    - assets/images/dishes/chicken_malai_tikka.jpg
+    - assets/images/dishes/bbq_chicken_pizza.jpg
+    - assets/images/dishes/mutton_biryani_bbq.jpg
 
-    # ===== Cities =====
-    - assets/images/cities/islamabad.jpg
+    # ========== DRINKS ==========
+    - assets/images/dishes/cold_drink.jpg
+    - assets/images/dishes/fresh_juice.jpg
+    - assets/images/dishes/mineral_water.jpg
+    - assets/images/dishes/tea.jpg
+    - assets/images/dishes/coffee.jpg
+    - assets/images/dishes/lassi.jpg
+    - assets/images/dishes/sharbat.jpg
+    - assets/images/dishes/ayran.jpg
+    - assets/images/dishes/mint_mojito.jpg
+    - assets/images/dishes/lemonade.jpg
+    - assets/images/dishes/mango_shake.jpg
+    - assets/images/dishes/banana_shake.jpg
+    - assets/images/dishes/fruit_punch.jpg
+    - assets/images/dishes/iced_tea.jpg
+    - assets/images/dishes/coconut_water.jpg
+    - assets/images/dishes/chai_latte.jpg
+    - assets/images/dishes/espresso.jpg
+    - assets/images/dishes/cappuccino.jpg
+    - assets/images/dishes/green_tea.jpg
+    - assets/images/dishes/herbal_tea.jpg
+
+    # ========== PUNJAB ==========
     - assets/images/cities/lahore.jpg
-    - assets/images/cities/karachi.jpg
     - assets/images/cities/faisalabad.jpg
     - assets/images/cities/rawalpindi.jpg
+    - assets/images/cities/multan.jpg
+    - assets/images/cities/gujranwala.jpg
+    - assets/images/cities/sialkot.jpg
+    - assets/images/cities/sargodha.jpg
+    - assets/images/cities/bahawalpur.jpg
+    - assets/images/cities/sahiwal.jpg
+    - assets/images/cities/dera_ghazi_khan.jpg
+    - assets/images/cities/jhang.jpg
+    - assets/images/cities/gujrat.jpg
+    - assets/images/cities/pakpattan.jpg
+    - assets/images/cities/rahim_yar_khan.jpg
+    - assets/images/cities/mianwali.jpg
+    - assets/images/cities/narowal.jpg
+    - assets/images/cities/khushab.jpg
+    - assets/images/cities/chiniot.jpg
+    - assets/images/cities/attock.jpg
 
-    # ===== Halls =====
-    - assets/images/halls/hall1.jpg
-    - assets/images/halls/hall2.jpg
-    - assets/images/halls/hall3.jpg
-    - assets/images/halls/hall4.jpg
+    # ========== SINDH ==========
+    - assets/images/cities/karachi.jpg
+    - assets/images/cities/hyderabad.jpg
+    - assets/images/cities/sukkur.jpg
+    - assets/images/cities/larkana.jpg
+    - assets/images/cities/mirpur_khas.jpg
+    - assets/images/cities/khairpur.jpg
+    - assets/images/cities/jacobabad.jpg
+    - assets/images/cities/dadu.jpg
+    - assets/images/cities/badin.jpg
+    - assets/images/cities/sanghar.jpg
 
-    # ===== Functions =====
-    - assets/images/mehndi.jpg
-    - assets/images/barat.jpg
-    - assets/images/walima.jpg
-    - assets/images/mehfil.jpg
-    - assets/images/others.jpg
+    # ========== KPK ==========
+    - assets/images/cities/peshawar.jpg
+    - assets/images/cities/mardan.jpg
+    - assets/images/cities/abbottabad.jpg
+    - assets/images/cities/swabi.jpg
+    - assets/images/cities/mansehra.jpg
+    - assets/images/cities/charsadda.jpg
+    - assets/images/cities/nowshera.jpg
+    - assets/images/cities/bannu.jpg
+    - assets/images/cities/kohat.jpg
+    - assets/images/cities/mingora.jpg
 
+    # ========== BALOCHISTAN ==========
+    - assets/images/cities/quetta.jpg
+    - assets/images/cities/gwadar.jpg
+    - assets/images/cities/turbat.jpg
+    - assets/images/cities/khuzdar.jpg
+    - assets/images/cities/zhob.jpg
+    - assets/images/cities/sibi.jpg
+    - assets/images/cities/bela.jpg
+    - assets/images/cities/pasni.jpg
+    - assets/images/cities/kalat.jpg
+
+
+    - assets/images/functions/mehndi.jpg
+    - assets/images/functions/barat.jpg
+    - assets/images/functions/walima.jpg
+    - assets/images/functions/mehfil.jpg
+    - assets/images/functions/engagement.jpg
+    - assets/images/functions/shadi.jpg
+    - assets/images/functions/birthday_party.jpg
+    - assets/images/functions/baby_shower.jpg
+    - assets/images/functions/corporate_event.jpg
+    - assets/images/functions/exhibition.jpg
+    - assets/images/functions/workshop.jpg
+    - assets/images/functions/seminar.jpg
+    - assets/images/functions/farewell.jpg
+    - assets/images/functions/reception.jpg
+    - assets/images/functions/valima.jpg
+    - assets/images/functions/anniversary.jpg
+    - assets/images/functions/housewarming.jpg
+    - assets/images/functions/sangeet.jpg
+    - assets/images/functions/dinner_party.jpg
+    - assets/images/functions/cocktail_party.jpg
