@@ -1,7 +1,19 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../models/hall.dart';
+import 'package:provider/provider.dart';
+import '../../helpers/app_settings.dart';
+import 'final_list_screen.dart';
 import 'add_hall_screen.dart';
-import 'hall_preview_screen.dart';
+import 'add_restaurant_screen.dart';
+import 'add_catering_screen.dart';
+import 'add_hotel_screen.dart';
+
+// ⬇️ Missing screens imports added
+import 'owner_profile_screen.dart';
+import 'notifications_screen.dart';
+import 'feedback_screen.dart';
+import 'contact_admin_screen.dart';
 
 class OwnerHomeScreen extends StatefulWidget {
   const OwnerHomeScreen({super.key});
@@ -11,358 +23,417 @@ class OwnerHomeScreen extends StatefulWidget {
 }
 
 class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
-  final List<Hall> myHalls = [];
-  bool hallAdded = false;
-  TimeOfDay? selectedTime;
+  final PageController _sliderController = PageController();
+  Timer? _sliderTimer;
+
+  final List<String> sliderImages = List.generate(
+      12, (index) => "assets/images/slider_${(index % 6) + 1}.jpg");
+
+  final ScrollController _chatScrollController = ScrollController();
+  final List<String> chatMessages = [];
+  final TextEditingController _chatInputController = TextEditingController();
+
+  Timer? _mockMessageTimer;
+  final Random _random = Random();
+  final List<String> mockMessages = [
+    "New booking request from Ali",
+    "Call from customer 03001234567",
+    "Message: 'Is dinner menu available?'",
+    "Customer inquiry about hall availability",
+    "New booking confirmed by Sarah",
+    "Call from 03101234567 regarding hotel",
+    "Message: 'Delivery time for restaurant?'",
+    "Customer feedback received",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startSliderAutoScroll();
+    _startMockMessages();
+  }
+
+  void _startSliderAutoScroll() {
+    _sliderTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_sliderController.hasClients) {
+        int nextPage = _sliderController.page!.toInt() + 1;
+        if (nextPage >= sliderImages.length) nextPage = 0;
+        _sliderController.animateToPage(nextPage,
+            duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
+      }
+    });
+  }
+
+  void _startMockMessages() {
+    _mockMessageTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) {
+      final msg = mockMessages[_random.nextInt(mockMessages.length)];
+      setState(() {
+        chatMessages.add(msg);
+      });
+      _scrollToBottom();
+    });
+  }
+
+  void _scrollToBottom() {
+    Timer(const Duration(milliseconds: 100), () {
+      if (_chatScrollController.hasClients) {
+        _chatScrollController.animateTo(
+          _chatScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendChat(String msg) {
+    if (msg.trim().isEmpty) return;
+    setState(() {
+      chatMessages.add("You: ${msg.trim()}");
+    });
+    _chatInputController.clear();
+    _scrollToBottom();
+  }
+
+  @override
+  void dispose() {
+    _sliderTimer?.cancel();
+    _mockMessageTimer?.cancel();
+    _sliderController.dispose();
+    _chatScrollController.dispose();
+    _chatInputController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background wallpaper
-          SizedBox.expand(
-            child: Image.asset(
-              "assets/images/wallpaper.jpg",
-              fit: BoxFit.cover,
-            ),
+    return Consumer<AppSettings>(
+      builder: (context, settings, child) {
+        return Scaffold(
+          drawer: _buildDrawer(settings),
+          appBar: AppBar(
+            title: const Text("Management Panel"),
+            centerTitle: true,
+            backgroundColor: Colors.deepPurple.shade700,
           ),
-          Container(color: Colors.black.withOpacity(0.25)),
-          SafeArea(
-            child: Column(
-              children: [
-                // Top bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'My Marriage Halls',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final result = await Navigator.push<Hall>(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const AddHallScreen()),
-                          );
-
-                          if (result != null) {
-                            final TimeOfDay? time = await showTimePicker(
-                              context: context,
-                              initialTime: TimeOfDay.now(),
-                            );
-
-                            if (!mounted) return;
-
-                            setState(() {
-                              myHalls.add(result);
-                              hallAdded = true;
-                              selectedTime = time;
-                            });
-
-                            // Auto hide success banner
-                            Future.delayed(const Duration(seconds: 2), () {
-                              if (!mounted) return;
-                              setState(() => hallAdded = false);
-                            });
-
-                            // Show Invoice / Proposal
-                            _showInvoice(result);
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 14, horizontal: 24),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
-                          elevation: 6,
-                          shadowColor: Colors.black45,
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add Hall',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
+          body: Stack(
+            children: [
+              SizedBox.expand(
+                child: Image.asset(
+                  "assets/images/new_wallpaper.jpg",
+                  fit: BoxFit.cover,
                 ),
-
-                const SizedBox(height: 10),
-
-                if (hallAdded)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.greenAccent.shade700,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(2, 2))
-                        ],
-                      ),
-                      child: const Text(
-                        "🎉 Your hall has been uploaded successfully!",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 12),
-
-                Expanded(
-                  child: myHalls.isEmpty ? _emptyState() : _hallList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _emptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.home_work_outlined, size: 80, color: Colors.white70),
-          SizedBox(height: 16),
-          Text('No halls added yet',
-              style: TextStyle(fontSize: 18, color: Colors.white70)),
-          SizedBox(height: 6),
-          Text('Tap "Add Hall" to add your wedding hall',
-              style: TextStyle(color: Colors.white70)),
-        ],
-      ),
-    );
-  }
-
-  Widget _hallList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: myHalls.length,
-      itemBuilder: (context, index) {
-        final hall = myHalls[index];
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => HallPreviewScreen(hall: hall)),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [Colors.deepPurple, Colors.purpleAccent],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(2, 4)),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                children: [
-                  Image.asset(
-                    hall.image,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  Container(
-                    height: 180,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withOpacity(0.3),
-                          Colors.black.withOpacity(0.1),
-                        ],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: 12,
-                    bottom: 12,
-                    right: 12,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(hall.name,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Text(hall.location,
-                            style: const TextStyle(color: Colors.white70)),
-                        const SizedBox(height: 4),
-                        Text('${hall.price} / day',
-                            style: const TextStyle(
-                                color: Colors.white, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                  ),
-                ],
               ),
-            ),
+              Container(color: Colors.black.withOpacity(0.3)),
+              SafeArea(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 250,
+                      child: PageView.builder(
+                        controller: _sliderController,
+                        itemCount: sliderImages.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.asset(
+                                    sliderImages[index],
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                      colors: [
+                                        Colors.black.withOpacity(0.5),
+                                        Colors.transparent
+                                      ],
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                    )),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: ListView(
+                          children: [
+                            _cardWithButton(
+                                "Add Hall",
+                                "assets/images/new_hall.jpg",
+                                Colors.purpleAccent.shade100,
+                                () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddHallScreen()),
+                              );
+                            }),
+                            const SizedBox(height: 16),
+                            _cardWithButton(
+                                "Add Restaurant",
+                                "assets/images/new_restaurant.jpg",
+                                Colors.orangeAccent.shade100, () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddRestaurantScreen()),
+                              );
+                            }),
+                            const SizedBox(height: 16),
+                            _cardWithButton(
+                                "Add Catering",
+                                "assets/images/new_catering.jpg",
+                                Colors.greenAccent.shade100, () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddCateringScreen()),
+                              );
+                            }),
+                            const SizedBox(height: 16),
+                            _cardWithButton(
+                                "Add Hotel",
+                                "assets/images/new_hotel.jpg",
+                                Colors.blueAccent.shade100, () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const AddHotelScreen()),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              "Live Chat / Calls",
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple.shade50),
+                            ),
+                          ),
+                          const Divider(color: Colors.white70),
+                          Expanded(
+                            child: ListView.builder(
+                              controller: _chatScrollController,
+                              itemCount: chatMessages.length,
+                              itemBuilder: (context, index) {
+                                bool isUser = chatMessages[index].startsWith("You:");
+                                return Container(
+                                  alignment: isUser
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  margin: const EdgeInsets.symmetric(
+                                      vertical: 4, horizontal: 12),
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isUser
+                                        ? Colors.deepPurpleAccent.withOpacity(0.6)
+                                        : Colors.deepPurple.shade400
+                                            .withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    chatMessages[index],
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _chatInputController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: "Type message...",
+                                      hintStyle: TextStyle(color: Colors.white70),
+                                      filled: true,
+                                      fillColor: Colors.black.withOpacity(0.2),
+                                      border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                          borderSide: BorderSide.none),
+                                    ),
+                                    onSubmitted: _sendChat,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.send, color: Colors.white),
+                                  onPressed: () =>
+                                      _sendChat(_chatInputController.text),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  void _showInvoice(Hall hall) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.85,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade800, Colors.purpleAccent.shade700],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
-                  blurRadius: 15,
-                  offset: const Offset(4, 6)),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade900.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: const [
-                    Text(
-                      "Marriage Hall Proposal",
-                      style: TextStyle(
-                          fontSize: 22,
-                          color: Colors.amber,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Professional Booking Summary",
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white70,
-                          fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              Column(
-                children: [
-                  _proposalRow("Hall Name", hall.name),
-                  _proposalRow("Location", hall.location),
-                  _proposalRow("Price / Day", "${hall.price}"),
-                  _proposalRow(
-                      "Event Time",
-                      selectedTime != null
-                          ? selectedTime!.format(context)
-                          : "--"),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.download),
-                    label: const Text("Download"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 18),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14))),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.share),
-                    label: const Text("Share"),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.greenAccent.shade700,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 18),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14))),
-                  ),
-                ],
-              )
-            ],
+  Widget _cardWithButton(
+      String title, String image, Color buttonColor, VoidCallback onTap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            image,
+            height: 160,
+            fit: BoxFit.cover,
           ),
         ),
+        const SizedBox(height: 8),
+        _glassButton(title, buttonColor, onTap),
+      ],
+    );
+  }
+
+  Widget _glassButton(String text, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.7), color.withOpacity(0.4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
+        ),
+        child: Center(
+            child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+        )),
       ),
     );
   }
 
-  Widget _proposalRow(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title,
-                style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500)),
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
+  Widget _buildDrawer(AppSettings settings) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          UserAccountsDrawerHeader(
+            decoration: BoxDecoration(color: Colors.deepPurple.shade700),
+            currentAccountPicture: const CircleAvatar(
+              backgroundImage: AssetImage("assets/images/profile.jpg"),
+            ),
+            accountName: const Text("Muhammad Ahmad gulzar"),
+            accountEmail: const Text("owner@email.com"),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text("Full Profile (A-Z Data)"),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const OwnerProfileScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications),
+            title: const Text("Notifications"),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_file),
+            title: const Text("My Uploads"),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FinalListScreen()),
+            ),
+          ),
+          ExpansionTile(
+            leading: const Icon(Icons.settings),
+            title: const Text("Settings"),
+            children: [
+              SwitchListTile(
+                title: const Text("Dark Mode"),
+                value: settings.isDarkMode,
+                onChanged: (_) => settings.toggleTheme(),
+              ),
+              SwitchListTile(
+                title: const Text("Reminder"),
+                value: settings.reminderOn,
+                onChanged: (val) => settings.toggleReminder(val),
+              ),
+            ],
+          ),
+          ListTile(
+            leading: const Icon(Icons.feedback),
+            title: const Text("Feedback"),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedbackScreen()),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.contact_support),
+            title: const Text("Contact Admin"),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ContactAdminScreen()),
+            ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Logout", style: TextStyle(color: Colors.red)),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Logged Out Successfully")));
+            },
+          ),
+        ],
       ),
     );
   }

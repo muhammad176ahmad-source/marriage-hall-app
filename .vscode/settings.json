@@ -1,0 +1,17 @@
+{
+    // Font settings with fallback
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
+    "editor.fontSize": 14,
+    "editor.fontLigatures": false,
+    // Cursor settings: thin vertical line
+    "editor.cursorStyle": "line",
+    "editor.cursorWidth": 1,
+    "editor.cursorBlinking": "blink",
+    // Anti-aliasing for smooth rendering
+    "editor.fontAliasing": "antialiased",
+    // Optional: make sure hardware acceleration doesn't thicken cursor
+    "window.zoomLevel": 0,
+    "terminal.integrated.gpuAcceleration": "auto",
+    // Ensure no visual interference
+    "editor.renderWhitespace": "none"
+}

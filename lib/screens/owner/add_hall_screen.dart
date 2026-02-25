@@ -1,16 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart'; // ✅ Add this line
-import 'dart:ui';
-import 'package:intl/intl.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-
-// Web ke liye
-import 'dart:typed_data';
-import 'dart:html' as html;
-
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../helpers/location_helper.dart';
+import '../../helpers/uploaded_data.dart';
+import 'final_list_screen.dart'; // ✅ Fixed import
 
 class AddHallScreen extends StatefulWidget {
   const AddHallScreen({super.key});
@@ -21,357 +15,405 @@ class AddHallScreen extends StatefulWidget {
 
 class _AddHallScreenState extends State<AddHallScreen> {
   final _formKey = GlobalKey<FormState>();
-  final GlobalKey _invoiceKey = GlobalKey();
+  final TextEditingController _ownerName = TextEditingController();
+  final TextEditingController _ownerPhone = TextEditingController();
+  final TextEditingController _ownerWhatsapp = TextEditingController();
+  final TextEditingController _ownerAddress = TextEditingController();
+  final TextEditingController _hallName = TextEditingController();
+  final TextEditingController _perHeadRate = TextEditingController();
+  final TextEditingController _guestCapacity = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _timeController = TextEditingController();
+  final TextEditingController _availableItems = TextEditingController();
 
-  // Hall fields
-  String name = '';
-  String location = '';
-  String description = '';
-  String price = '';
-  String image = 'assets/hall1.jpg'; // Placeholder
-  DateTime? availableDate;
-  TimeOfDay? bookingTime;
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+  final ImagePicker _picker = ImagePicker();
+  XFile? profileImage;
+  XFile? hallImage;
 
-  // Owner fields
-  String ownerPhone = '';
-  String ownerWhatsapp = '';
+  double? latitude;
+  double? longitude;
 
-  // Category
-  String category = 'Mehndi';
-  final List<String> categories = ['Mehndi', 'Barat', 'Walima', 'Mehfil', 'Others'];
+  // ================= EXTRA LIST DATA =================
+  List<String> functionList = [
+    "Wedding","Mehndi","Baraat","Walima","Engagement",
+    "Birthday","Corporate Event","Anniversary",
+    "Nikkah","Bridal Shower"
+  ];
+  List<String> selectedFunctions = [];
 
-  // Dishes & Menus
-  final Map<String, List<String>> menus = {
-    "Wedding Menu": ["Chicken Biryani", "Mutton Karahi", "Salad", "Dessert"],
-    "Birthday Menu": ["Pizza", "Burger", "Cake", "Fries"],
-    "Conference Menu": ["Sandwich", "Pasta", "Juice", "Coffee"],
-  };
-  final Map<String, List<bool>> selectedDishes = {};
+  List<String> availableItemList = [
+    "Stage","Lighting","Sound System","DJ",
+    "Bridal Room","Parking","AC","Generator",
+    "Security","Decoration Setup"
+  ];
+  List<String> selectedAvailableItems = [];
 
-  // Saved halls
-  final List<Map<String, dynamic>> addedHalls = [];
+  List<String> perHeadRateOptions = [
+    "1000","1200","1500","1800",
+    "2000","2500","3000","3500"
+  ];
+  List<String> selectedRates = [];
 
-  bool isSaving = false;
+  List<String> guestOptions = [
+    "100","200","300","500","700","1000"
+  ];
+  List<String> selectedGuests = [];
 
-  @override
-  void initState() {
-    super.initState();
-    for (var menu in menus.keys) {
-      selectedDishes[menu] = List.filled(menus[menu]!.length, false);
+  double totalAmount = 0;
+
+  void calculateTotal() {
+    if (selectedRates.isNotEmpty && selectedGuests.isNotEmpty) {
+      double rate = double.tryParse(selectedRates.first) ?? 0;
+      double guests = double.tryParse(selectedGuests.first) ?? 0;
+      setState(() {
+        totalAmount = rate * guests;
+      });
     }
   }
 
-  Widget _buildTextField(String label, String value, Function(String) onChanged, TextInputType type,
-      {int maxLines = 1}) {
-    return TextFormField(
-      initialValue: value,
-      maxLines: maxLines,
-      keyboardType: type,
-      onChanged: onChanged,
-      validator: (val) => val!.isEmpty ? 'Please enter $label' : null,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey.shade100.withOpacity(0.8),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-        ),
-        labelStyle: const TextStyle(color: Colors.deepPurple),
-      ),
-    );
+  // ===== Image Pickers =====
+  Future<void> pickProfileImage() async {
+    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) setState(() => profileImage = picked);
   }
 
-  Future<void> _pickDate() async {
+  Future<void> pickHallImage() async {
+    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) setState(() => hallImage = picked);
+  }
+
+  // ===== Date & Time Pickers =====
+  Future<void> pickDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: availableDate ?? DateTime.now(),
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime(DateTime.now().year + 5),
+      lastDate: DateTime(2100),
     );
-
-    if (picked != null) setState(() => availableDate = picked);
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        _dateController.text = "${picked.day}/${picked.month}/${picked.year}";
+      });
+    }
   }
 
-  Future<void> _pickTime() async {
+  Future<void> pickTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: bookingTime ?? TimeOfDay.now(),
+      initialTime: TimeOfDay.now(),
     );
-    if (picked != null) setState(() => bookingTime = picked);
+    if (picked != null) {
+      setState(() {
+        selectedTime = picked;
+        _timeController.text = picked.format(context);
+      });
+    }
   }
 
-  void _saveHall() {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (availableDate == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Please select available date')));
-      return;
-    }
-    if (bookingTime == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Please select booking time')));
-      return;
-    }
-
-    setState(() => isSaving = true);
-
-    final hallData = {
-      "name": name,
-      "location": location,
-      "description": description,
-      "price": price,
-      "image": image,
-      "category": category,
-      "availableDate": availableDate,
-      "bookingTime": bookingTime,
-    };
-
+  // ===== Location =====
+  Future<void> fetchLocation() async {
+    final loc = await LocationHelper.getCurrentLocation();
     setState(() {
-      addedHalls.add(hallData);
-      isSaving = false;
-      name = '';
-      location = '';
-      description = '';
-      price = '';
-      ownerPhone = '';
-      ownerWhatsapp = '';
-      bookingTime = null;
-      availableDate = null;
-      selectedDishes.forEach((key, value) => value.fillRange(0, value.length, false));
+      latitude = loc?.latitude ?? 0.0;
+      longitude = loc?.longitude ?? 0.0;
     });
   }
 
-  Color _statusColor(DateTime date, TimeOfDay time) {
-    final now = DateTime.now();
-    final hallDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    return hallDateTime.isBefore(now) ? Colors.red : Colors.green;
-  }
+  // ===== Submit =====
+  void _submitHall() async {
+    await fetchLocation();
+    if (_formKey.currentState!.validate()) {
+      UploadedData.addData({
+        "type": "Hall",
+        "ownerName": _ownerName.text,
+        "phone": _ownerPhone.text,
+        "whatsapp": _ownerWhatsapp.text,
+        "address": _ownerAddress.text,
+        "hallName": _hallName.text,
+        "perHeadRate": _perHeadRate.text,
+        "guestCapacity": _guestCapacity.text,
+        "availableItems": _availableItems.text,
+        "date": _dateController.text,
+        "time": _timeController.text,
+        "profileImage": profileImage?.path,
+        "hallImage": hallImage?.path,
+        "lat": latitude,
+        "lng": longitude,
+        // ✅ Extra selections
+        "selectedFunctions": selectedFunctions,
+        "selectedAvailableItems": selectedAvailableItems,
+        "selectedRates": selectedRates,
+        "selectedGuests": selectedGuests,
+        "totalAmount": totalAmount,
+      });
 
-  String _statusText(DateTime date, TimeOfDay time) {
-    final now = DateTime.now();
-    final hallDateTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-    return hallDateTime.isBefore(now) ? "Expired" : "Booked";
-  }
-
-  // ===== Share or Download Invoice =====
-  Future<void> _shareInvoice(GlobalKey key) async {
-    try {
-      RenderRepaintBoundary boundary =
-          key.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ImageByteFormat.png);
-      final pngBytes = byteData!.buffer.asUint8List();
-
-      if (kIsWeb) {
-        // Web: Download
-        final blob = html.Blob([pngBytes]);
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.document.createElement('a') as html.AnchorElement
-          ..href = url
-          ..download = 'hall_invoice.png'
-          ..style.display = 'none';
-        html.document.body!.children.add(anchor);
-        anchor.click();
-        html.document.body!.children.remove(anchor);
-        html.Url.revokeObjectUrl(url);
-      } else {
-        // Mobile: Share
-        final tempDir = await getTemporaryDirectory();
-        final file = await File('${tempDir.path}/hall_invoice.png').writeAsBytes(pngBytes);
-        await Share.shareXFiles([XFile(file.path)], text: 'Check out this hall!');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error sharing invoice: $e')));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => FinalListScreen()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateText =
-        availableDate != null ? DateFormat('dd MMM yyyy').format(availableDate!) : 'Select Date';
-    final timeText = bookingTime != null ? bookingTime!.format(context) : 'Select Time';
-
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Add Wedding Hall'),
-        backgroundColor: Colors.deepPurple.withOpacity(0.7),
+        title: const Text("Add Hall"),
+        backgroundColor: Colors.deepPurple.shade700,
         centerTitle: true,
-        elevation: 0,
       ),
       body: Stack(
         children: [
-          SizedBox.expand(child: Image.asset('assets/hall_bg.jpg', fit: BoxFit.cover)),
-          Container(color: Colors.black.withOpacity(0.3)),
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/images/hall_bg.jpg"),
+                  fit: BoxFit.cover),
+            ),
+          ),
+          Container(color: Colors.black.withOpacity(0.6)),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(color: Colors.black.withOpacity(0.1)),
+          ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                  child: Container(
-                    color: Colors.white.withOpacity(0.25),
-                    padding: const EdgeInsets.all(16),
-                    child: ListView(
-                      children: [
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              _buildTextField('Hall Name', name, (val) => name = val, TextInputType.text),
-                              const SizedBox(height: 16),
-                              _buildTextField('Location', location, (val) => location = val, TextInputType.text),
-                              const SizedBox(height: 16),
-                              _buildTextField('Description', description, (val) => description = val,
-                                  TextInputType.text, maxLines: 3),
-                              const SizedBox(height: 16),
-                              _buildTextField('Price', price, (val) => price = val, TextInputType.number),
-                              const SizedBox(height: 16),
-                              _buildTextField('Owner Phone', ownerPhone, (val) => ownerPhone = val, TextInputType.phone),
-                              const SizedBox(height: 16),
-                              _buildTextField('Owner WhatsApp', ownerWhatsapp, (val) => ownerWhatsapp = val, TextInputType.phone),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: _pickDate,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey.shade100.withOpacity(0.8),
-                                          border: Border.all(color: Colors.grey.shade400),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.calendar_month, color: Colors.deepPurple),
-                                            const SizedBox(width: 12),
-                                            Text(dateText),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: _pickTime,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(12),
-                                          color: Colors.grey.shade100.withOpacity(0.8),
-                                          border: Border.all(color: Colors.grey.shade400),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.access_time, color: Colors.deepPurple),
-                                            const SizedBox(width: 12),
-                                            Text(timeText),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              DropdownButtonFormField<String>(
-                                value: category,
-                                items: categories
-                                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                                    .toList(),
-                                onChanged: (val) {
-                                  if (val != null) setState(() => category = val);
-                                },
-                                decoration: InputDecoration(
-                                  labelText: 'Function Category',
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100.withOpacity(0.8),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-                                  ),
-                                  labelStyle: const TextStyle(color: Colors.deepPurple),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
-                        Center(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.add_business, color: Colors.white),
-                            label: const Text("Add Hall", style: TextStyle(fontSize: 18)),
-                            onPressed: isSaving ? null : _saveHall,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                              elevation: 12,
-                              shadowColor: Colors.deepPurpleAccent,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // ===== Display Added Halls =====
-                        if (addedHalls.isNotEmpty)
-                          RepaintBoundary(
-                            key: _invoiceKey,
-                            child: Column(
-                              children: addedHalls.map((hall) {
-                                final statusColor = _statusColor(hall['availableDate'], hall['bookingTime']);
-                                final statusText = _statusText(hall['availableDate'], hall['bookingTime']);
-                                return Card(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  margin: const EdgeInsets.symmetric(vertical: 8),
-                                  elevation: 6,
-                                  child: ListTile(
-                                    leading: Image.asset(hall['image'], width: 60, fit: BoxFit.cover),
-                                    title: Text(hall['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text('${hall['location']} • ${hall['price']}'),
-                                    trailing: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: statusColor,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(statusText,
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                        if (addedHalls.isNotEmpty)
-                          Center(
-                            child: ElevatedButton.icon(
-                              onPressed: () => _shareInvoice(_invoiceKey),
-                              icon: const Icon(Icons.share, color: Colors.white),
-                              label: const Text("Share/Download Invoice"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.deepPurple,
-                                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                elevation: 12,
-                                shadowColor: Colors.deepPurpleAccent,
-                              ),
-                            ),
-                          ),
-                      ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: pickProfileImage,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.deepPurple.shade100,
+                        backgroundImage: profileImage != null
+                            ? FileImage(File(profileImage!.path))
+                            : null,
+                        child: profileImage == null
+                            ? const Icon(Icons.person,
+                                size: 50, color: Colors.white)
+                            : null,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    _glassField(_ownerName, "Owner Name"),
+                    _glassField(_ownerPhone, "Phone Number"),
+                    _glassField(_ownerWhatsapp, "WhatsApp Number"),
+                    _glassField(_ownerAddress, "Address"),
+                    const SizedBox(height: 16),
+                    _glassField(_hallName, "Hall Name"),
+                    _glassField(_perHeadRate, "Per Head Rate",
+                        keyboardType: TextInputType.number),
+                    _glassField(_guestCapacity, "Guest Capacity",
+                        keyboardType: TextInputType.number),
+                    _glassField(_availableItems, "Available Items"),
+                    _dateTimeField(_dateController, "Select Date", pickDate),
+                    _dateTimeField(_timeController, "Select Time", pickTime),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: pickHallImage,
+                      child: Container(
+                        height: 180,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          image: hallImage != null
+                              ? DecorationImage(
+                                  image: FileImage(File(hallImage!.path)),
+                                  fit: BoxFit.cover)
+                              : null,
+                        ),
+                        child: hallImage == null
+                            ? const Center(
+                                child: Text("Upload Hall Image",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18)),
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // ================= Extra Checklists =================
+                    _sectionTitle("Select Functions"),
+                    _buildChecklist(functionList, selectedFunctions, true),
+
+                    _sectionTitle("Hall Facilities"),
+                    _buildChecklist(availableItemList, selectedAvailableItems, false),
+
+                    _sectionTitle("Per Head Rate Options"),
+                    _buildChecklist(perHeadRateOptions, selectedRates, false),
+
+                    _sectionTitle("Guest Capacity Options"),
+                    _buildChecklist(guestOptions, selectedGuests, false),
+
+                    const SizedBox(height: 20),
+
+                    if (totalAmount > 0)
+                      Text(
+                        "Total Estimate: Rs $totalAmount",
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+
+                    _premiumButton(_submitHall),
+                  ],
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== Widgets =====
+  Widget _glassField(TextEditingController controller, String label,
+      {TextInputType keyboardType = TextInputType.text}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+        ),
+        validator: (v) => v!.isEmpty ? "This field is required" : null,
+      ),
+    );
+  }
+
+  Widget _dateTimeField(
+      TextEditingController controller, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(controller.text.isEmpty ? label : controller.text,
+                style: const TextStyle(color: Colors.white70)),
+            const Icon(Icons.calendar_today, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _premiumButton(VoidCallback onTap) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.deepPurple.shade700,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: const Text(
+          "Submit",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  // ================= Extra Helper Widgets =================
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChecklist(
+      List<String> items, List<String> selected, bool showSelectAll) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Column(
+        children: [
+          if (showSelectAll)
+            CheckboxListTile(
+              value: selected.length == items.length,
+              onChanged: (val) {
+                setState(() {
+                  if (val == true) {
+                    selected.clear();
+                    selected.addAll(items);
+                  } else {
+                    selected.clear();
+                  }
+                });
+              },
+              activeColor: Colors.deepPurple,
+              title: const Text(
+                "Select All",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: items.map((item) {
+              final isSelected = selected.contains(item);
+              return FilterChip(
+                label: Text(item),
+                selected: isSelected,
+                selectedColor: Colors.deepPurple.shade400,
+                checkmarkColor: Colors.white,
+                labelStyle: const TextStyle(color: Colors.white),
+                backgroundColor: Colors.white.withOpacity(0.1),
+                onSelected: (val) {
+                  setState(() {
+                    if (val) {
+                      selected.add(item);
+                    } else {
+                      selected.remove(item);
+                    }
+                    calculateTotal();
+                  });
+                },
+              );
+            }).toList(),
           ),
         ],
       ),

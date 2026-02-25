@@ -11,6 +11,9 @@ dependencies:
   cupertino_icons: ^1.0.5
   # url_launcher: ^6.0.9
   intl: ^0.17.0
+  path_provider: ^2.0.15
+  # share_plus: ^6.3.0
+  # intl: ^0.18.1
   shared_preferences: ^2.0.15
   flutter_secure_storage: ^5.0.2
   google_fonts: ^8.0.1
@@ -24,6 +27,11 @@ dependencies:
   # flutter_gifimage: ^2.0.0  # Correct version (latest available)
   # flutter_gif: ^0.2.0
   flutter_gif: ^0.0.4
+  image_picker: ^1.1.0
+  google_maps_flutter: ^2.3.0
+  geolocator: 14.0.2
+  permission_handler: ^11.2.0
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -38,7 +46,7 @@ flutter:
     - assets/images/slide3.jpg
     - assets/images/background.jpg
     - assets/images/jungle.jpg
-    - assets/images/halls/hall3.jpg
+    # - assets/images/halls/hall3.jpg
     - assets/images/wallpaper.jpg
     - assets/images/home_bg.jpg
     - assets/sounds/tap.mp3
@@ -212,3 +220,19 @@ flutter:
     - assets/images/functions/sangeet.jpg
     - assets/images/functions/dinner_party.jpg
     - assets/images/functions/cocktail_party.jpg
+      #  owner home screen images
+    - assets/images/new_wallpaper.jpg
+    - assets/images/new_hall.jpg
+    - assets/images/new_restaurant.jpg
+    - assets/images/new_catering.jpg
+    - assets/images/new_hotel.jpg
+    - assets/images/profile.jpg
+     
+    #  owner hall kay andar form ka background images
+    - assets/images/hall_bg.jpg
+    - assets/images/restaurant_bg.jpg
+    - assets/images/catering_bg.jpg
+    - assets/images/hotel_bg.jpg
+    # splash screen card 
+    - assets/images/your_profile_picture.jpg
+    

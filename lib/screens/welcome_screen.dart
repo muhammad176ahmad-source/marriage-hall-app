@@ -146,6 +146,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 'assets/images/slide1.jpg',
                 'assets/images/slide2.jpg',
                 'assets/images/slide3.jpg',
+                'assets/images/slide4.jpg',
+                'assets/images/slide5.jpg',
+                'assets/images/slide6.jpg',
+                'assets/images/slide6.jpg',
               ].map((imagePath) {
                 return SizedBox(
                   width: size.width,
