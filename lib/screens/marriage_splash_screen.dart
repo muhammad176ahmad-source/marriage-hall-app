@@ -200,18 +200,18 @@ class _MarriageSplashScreenState extends State<MarriageSplashScreen>
                     ],
                     border: Border.all(
                       color: Colors.white70,
-                      width: 1.5,
+                      width: 5.25,
                     ),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(95),
                     child: Image.asset(
                       "assets/images/your_profile_picture.jpg",
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 35),
                 SlideTransition(
                   position: _titleSlide,
                   child: FadeTransition(
