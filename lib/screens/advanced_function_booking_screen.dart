@@ -1,3 +1,4 @@
+// lib/screens/advanced_function_booking_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,48 +29,48 @@ class _AdvancedFunctionBookingScreenState
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
 
-  // Local copy of selected dishes for dynamic receipt
-  late List<String> receiptDishes;
+  // Map for dishes & quantity
+  late Map<String, int> dishQuantity;
 
   @override
   void initState() {
     super.initState();
-    receiptDishes = List.from(widget.selectedDishes);
+    dishQuantity = {for (var d in widget.selectedDishes) d: 1};
   }
 
   void addDish(String dish) {
     setState(() {
-      receiptDishes.add(dish);
+      dishQuantity[dish] = (dishQuantity[dish] ?? 0) + 1;
     });
   }
 
   void removeDish(String dish) {
     setState(() {
-      receiptDishes.remove(dish);
+      if ((dishQuantity[dish] ?? 0) > 1) {
+        dishQuantity[dish] = dishQuantity[dish]! - 1;
+      } else {
+        dishQuantity.remove(dish);
+      }
     });
   }
 
   double calculateTotal() {
     double perDishRate = 500; // Example per dish rate
-    return receiptDishes.length * perDishRate;
+    double total = 0;
+    dishQuantity.forEach((dish, qty) {
+      total += qty * perDishRate;
+    });
+    return total;
   }
 
   void _callHall(String phone) async {
     final Uri url = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      debugPrint('Could not launch $phone');
-    }
+    if (await canLaunchUrl(url)) await launchUrl(url);
   }
 
   void _emailHall(String email) async {
     final Uri url = Uri(scheme: 'mailto', path: email);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      debugPrint('Could not email $email');
-    }
+    if (await canLaunchUrl(url)) await launchUrl(url);
   }
 
   Future<void> _pickDate() async {
@@ -80,11 +81,7 @@ class _AdvancedFunctionBookingScreenState
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
     );
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
   Future<void> _pickTime() async {
@@ -92,11 +89,7 @@ class _AdvancedFunctionBookingScreenState
       context: context,
       initialTime: _selectedTime ?? TimeOfDay.now(),
     );
-    if (picked != null) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
+    if (picked != null) setState(() => _selectedTime = picked);
   }
 
   void _confirmBooking() {
@@ -116,7 +109,7 @@ Time: ${_selectedTime!.format(context)}
 Guests: ${_guestsController.text}
 
 Selected Dishes:
-${receiptDishes.isEmpty ? "No dishes selected" : receiptDishes.join(", ")}
+${dishQuantity.entries.map((e) => '${e.key} x${e.value}').join(", ")}
 
 Name: ${_nameController.text}
 Email: ${_emailController.text}
@@ -178,22 +171,17 @@ Total: Rs ${calculateTotal()}
               ),
             const SizedBox(height: 10),
 
-            // Hall Info & Chips
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    hall['name'] ?? "",
-                    style: const TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
+                  Text(hall['name'] ?? "",
+                      style: const TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    hall['location'] ?? "",
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
+                  Text(hall['location'] ?? "",
+                      style: const TextStyle(fontSize: 16, color: Colors.grey)),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -208,18 +196,15 @@ Total: Rs ${calculateTotal()}
                         backgroundColor: Colors.orange.shade100,
                       ),
                       Chip(
-                        label:
-                            Text('Per Head: Rs ${hall['perHeadRate'] ?? 0}'),
+                        label: Text('Per Head: Rs ${hall['perHeadRate'] ?? 0}'),
                         backgroundColor: Colors.green.shade100,
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  const Text(
-                    'Facilities',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Facilities',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
@@ -231,17 +216,94 @@ Total: Rs ${calculateTotal()}
                   ),
                   const SizedBox(height: 20),
 
-                  // ===== Booking Form =====
+                  // ================= Selected Items Cards with Quantity =================
+                  const Text('Selected Items',
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: dishQuantity.length,
+                      itemBuilder: (context, index) {
+                        final dish = dishQuantity.keys.elementAt(index);
+                        final qty = dishQuantity[dish]!;
+                        final image = hall['images'] != null &&
+                                hall['images'].isNotEmpty
+                            ? hall['images'][index % hall['images'].length]
+                            : 'https://via.placeholder.com/150';
+
+                        return Container(
+                          width: 140,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Card(
+                            elevation: 6,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(16)),
+                                  child: Image.network(
+                                    image,
+                                    height: 80,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 6),
+                                  child: Column(
+                                    children: [
+                                      Text(dish,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
+                                          overflow: TextOverflow.ellipsis),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove,
+                                                size: 20),
+                                            onPressed: () => removeDish(dish),
+                                          ),
+                                          Text('$qty',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold)),
+                                          IconButton(
+                                            icon:
+                                                const Icon(Icons.add, size: 20),
+                                            onPressed: () => addDish(dish),
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ================= Booking Form =================
                   Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Booking Form',
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
+                        const Text('Booking Form',
+                            style: TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 10),
                         TextFormField(
                           controller: _nameController,
@@ -267,8 +329,9 @@ Total: Rs ${calculateTotal()}
                               labelText: 'Phone',
                               border: OutlineInputBorder()),
                           keyboardType: TextInputType.phone,
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Enter phone number' : null,
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Enter phone number'
+                              : null,
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
@@ -305,11 +368,9 @@ Total: Rs ${calculateTotal()}
                         const SizedBox(height: 20),
 
                         // ====== Receipt ======
-                        const Text(
-                          'Selected Dishes Receipt',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
+                        const Text('Selected Dishes Receipt',
+                            style:
+                                TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 6),
                         Container(
                           decoration: BoxDecoration(
@@ -317,11 +378,12 @@ Total: Rs ${calculateTotal()}
                               borderRadius: BorderRadius.circular(8)),
                           height: 150,
                           child: ListView.builder(
-                            itemCount: receiptDishes.length,
+                            itemCount: dishQuantity.length,
                             itemBuilder: (context, index) {
-                              final dish = receiptDishes[index];
+                              final dish = dishQuantity.keys.elementAt(index);
+                              final qty = dishQuantity[dish]!;
                               return ListTile(
-                                title: Text(dish),
+                                title: Text('$dish x$qty'),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.delete, color: Colors.red),
                                   onPressed: () => removeDish(dish),

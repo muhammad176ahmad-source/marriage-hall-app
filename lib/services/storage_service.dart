@@ -18,3 +18,19 @@ class StorageService {
     }
   }
 }
+
+class StorageService {
+
+  final FirebaseStorage storage = FirebaseStorage.instance;
+
+  Future<String> uploadImage(File file,String path) async {
+
+    final ref = storage.ref().child(path);
+
+    await ref.putFile(file);
+
+    return await ref.getDownloadURL();
+
+  }
+
+}

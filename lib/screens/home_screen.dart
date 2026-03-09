@@ -1,122 +1,84 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:intl/intl.dart';
-import 'package:cross_file/cross_file.dart';
-
-import 'advanced_function_booking_screen.dart';
-import 'booking_screen.dart';
-import 'booking_confirmation_screen.dart';
 import 'category_screen.dart';
+import 'proposal_screen.dart';
+import 'function_calculator_screen.dart';
+import 'chat_screen.dart';
+import 'profile_screen.dart';
 
-// ==================== Grouped Data ====================
-
-final Map<String, List<String>> groupedDishes = {
-  "Sweet": [
-    "Gulab Jamun","Kheer","Gajar Ka Halwa","Ras Malai","Barfi","Jalebi","Sooji Ka Halwa","Phirni","Malai Kulfi","Seviyan",
-    "Rabri","Ladoo","Mysore Pak","Besan Barfi","Chocolate Cake","Brownie","Carrot Halwa","Peda","Kulfi Falooda","Anjeer Halwa",
+// ================= Sample category data =================
+final Map<String, List<Map<String, dynamic>>> categoryData = {
+  "Agents": [
+    {
+      "name": "Ali Agency",
+      "phone": "+923001234567",
+      "location": "Karachi",
+      "fee": 5000,
+      "images": [
+        "assets/images/agents/agent1_1.jpg",
+        "assets/images/agents/agent1_2.jpg"
+      ]
+    },
+    {
+      "name": "Sara Agency",
+      "phone": "+923002345678",
+      "location": "Lahore",
+      "fee": 7000,
+      "images": [
+        "assets/images/agents/agent2_1.jpg",
+        "assets/images/agents/agent2_2.jpg"
+      ]
+    }
   ],
-  "Salt": [
-    "Aloo Finger","Chili Paneer","Hakka Noodles","Channa Masala","Veg Biryani","Chicken Biryani","Nihari","Pakora","Samosa","Paneer Tikka",
-    "Aloo Tikki","Chana Chaat","Veg Cutlet","Corn Chaat","Stuffed Capsicum","Dhokla","Idli","Vada","Bhel Puri","Paneer Pakora",
+  "Halls": [
+    {
+      "name": "Royal Banquet Hall",
+      "phone": "+923003456789",
+      "location": "Karachi",
+      "fee": 250000,
+      "images": [
+        "assets/images/halls/hall1.jpg",
+        "assets/images/halls/hall2.jpg"
+      ]
+    },
+    {
+      "name": "Grand Palace",
+      "phone": "+923004567890",
+      "location": "Lahore",
+      "fee": 300000,
+      "images": [
+        "assets/images/halls/hall3.jpg",
+        "assets/images/halls/hall4.jpg"
+      ]
+    }
   ],
-  "BBQ": [
-    "Butter Chicken","Palak Chicken","Seekh Kabab","Tandoori Chicken","BBQ Ribs","Chapli Kebab","Mutton Chops","Grilled Fish","Chicken Wings","Beef Ribs",
-    "Tikka","Barbecue Prawns","Malai Tikka","Chicken Malai Boti","Reshmi Kabab","BBQ Lamb","Chicken Fry","Chicken Malai Tikka","BBQ Chicken Pizza","Mutton Biryani BBQ",
+  "Restaurants": [
+    {
+      "name": "Biryani Palace",
+      "phone": "+923005678901",
+      "location": "Karachi",
+      "fee": 2000,
+      "images": [
+        "assets/images/restaurants/rest1_1.jpg",
+        "assets/images/restaurants/rest1_2.jpg"
+      ]
+    }
   ],
-  "Drinks": [
-    "Cold Drink","Fresh Juice","Mineral Water","Tea","Coffee","Lassi","Sharbat","Ayran","Mint Mojito","Lemonade","Mango Shake","Banana Shake","Fruit Punch","Iced Tea","Coconut Water","Chai Latte","Espresso","Cappuccino","Green Tea","Herbal Tea",
-  ],
+  "Catering": [
+    {
+      "name": "Delicious Catering",
+      "phone": "+923006789012",
+      "location": "Lahore",
+      "fee": 15000,
+      "images": [
+        "assets/images/catering/cater1_1.jpg",
+        "assets/images/catering/cater1_2.jpg"
+      ]
+    }
+  ]
 };
 
-// Dish Images
-final Map<String, String> dishImages = {
-  "Gulab Jamun": "assets/images/dishes/gulab_jamun.jpg",
-  "Kheer": "assets/images/dishes/kheer.jpg",
-  "Gajar Ka Halwa": "assets/images/dishes/gajar_ka_halwa.jpg",
-  "Ras Malai": "assets/images/dishes/ras_malai.jpg",
-  "Barfi": "assets/images/dishes/barfi.jpg",
-  "Jalebi": "assets/images/dishes/jalebi.jpg",
-  "Sooji Ka Halwa": "assets/images/dishes/sooji_ka_halwa.jpg",
-  "Aloo Finger": "assets/images/dishes/aloo_finger.jpg",
-  "Chili Paneer": "assets/images/dishes/chili_paneer.jpg",
-  "Hakka Noodles": "assets/images/dishes/hakka_noodles.jpg",
-  "Channa Masala": "assets/images/dishes/channa_masala.jpg",
-  "Veg Biryani": "assets/images/dishes/veg_biryani.jpg",
-  "Chicken Biryani": "assets/images/dishes/chicken_biryani.jpg",
-  "Nihari": "assets/images/dishes/nihari.jpg",
-  "Butter Chicken": "assets/images/dishes/butter_chicken.jpg",
-  "Palak Chicken": "assets/images/dishes/palak_chicken.jpg",
-  "Seekh Kabab": "assets/images/dishes/seekh_kabab.jpg",
-  "Tandoori Chicken": "assets/images/dishes/tandoori_chicken.jpg",
-  "BBQ Ribs": "assets/images/dishes/bbq_ribs.jpg",
-  "Chapli Kebab": "assets/images/dishes/chapli_kebab.jpg",
-  "Cold Drink": "assets/images/dishes/cold_drink.jpg",
-  "Fresh Juice": "assets/images/dishes/fresh_juice.jpg",
-  "Mineral Water": "assets/images/dishes/mineral_water.jpg",
-  "Tea": "assets/images/dishes/tea.jpg",
-  "Coffee": "assets/images/dishes/coffee.jpg",
-  "Lassi": "assets/images/dishes/lassi.jpg",
-  "Sharbat": "assets/images/dishes/sharbat.jpg",
-};
-
-// Cities - 50 cities, grouped by province
-final Map<String, List<String>> groupedCities = {
-  "Punjab": [
-    "Lahore","Faisalabad","Rawalpindi","Multan","Gujranwala","Sialkot","Sargodha","Bahawalpur","Sahiwal","Dera Ghazi Khan",
-    "Jhang","Gujrat","Pakpattan","Rahim Yar Khan","Mianwali","Narowal","Fazilka","Khushab","Chiniot","Attock",
-  ],
-  "KPK": [
-    "Peshawar","Mardan","Abbottabad","Swabi","Mansehra","Charsadda","Nowshera","Bannu","Dera Ismail Khan","Kohat",
-    "Haripur","Swat","Batkhela","Malakand","Buner","Chitral","Dir","Torghar","Mingora","Karak",
-  ],
-  "Sindh": [
-    "Karachi","Hyderabad","Sukkur","Larkana","Shaheed Benazirabad","Mirpur Khas","Nawabshah","Khairpur","Jacobabad","Dadu",
-    "Badin","Tando Allahyar","Tando Muhammad Khan","Ghotki","Shikarpur","Umerkot","Sanghar","Matiari","Jamshoro","Naushahro Feroze",
-  ],
-  "Balochistan": [
-    "Quetta","Gwadar","Turbat","Khuzdar","Zhob","Sibi","Bela","Pasni","Jaffarabad","Kalat",
-    "Lasbela","Mastung","Pishin","Chagai","Kharan","Panjgur","Kohlu","Nushki","Kech","Dera Bugti",
-  ],
-};
-
-// City Images (sample)
-final Map<String, String> cityImages = {
-  "Lahore": "assets/images/cities/lahore.jpg",
-  "Karachi": "assets/images/cities/karachi.jpg",
-  "Islamabad": "assets/images/cities/islamabad.jpg",
-  "Faisalabad": "assets/images/cities/faisalabad.jpg",
-  "Peshawar": "assets/images/cities/peshawar.jpg",
-};
-
-// Functions - 20 types
-final List<String> functionsList = [
-  "Mehndi","Barat","Walima","Mehfil","Engagement","Shadi","Birthday Party","Baby Shower","Corporate Event",
-  "Exhibition","Workshop","Seminar","Farewell","Reception","Valima","Anniversary","Housewarming","Sangeet","Dinner Party","Cocktail Party"
-];
-
-// Function Images (sample)
-final Map<String, String> functionImages = {
-  "Mehndi": "assets/images/functions/mehndi.jpg",
-  "Barat": "assets/images/functions/barat.jpg",
-  "Walima": "assets/images/functions/walima.jpg",
-};
-
-// Available Halls
-final List<Map<String, dynamic>> availableHalls = [
-  {"name": "Royal Marriage Hall", "city": "Islamabad", "status": "Available", "image": "assets/images/halls/hall1.jpg", "menu": ["Aloo Finger", "Butter Chicken"]},
-  {"name": "Grand Palace", "city": "Lahore", "status": "Booked", "image": "assets/images/halls/hall2.jpg", "menu": ["Channa Masala", "Gulab Jamun"]},
-  {"name": "Regal Banquet", "city": "Karachi", "status": "Available", "image": "assets/images/halls/hall3.jpg", "menu": ["Palak Chicken", "Hakka Noodles"]},
-  {"name": "Golden Venue", "city": "Faisalabad", "status": "Available", "image": "assets/images/halls/hall4.jpg", "menu": ["Chili Paneer", "Kheer"]},
-  {"name": "Pearl Continental", "city": "Peshawar", "status": "Available", "image": "assets/images/halls/hall5.jpg", "menu": ["Chapli Kebab", "Sooji Ka Halwa"]},
-];
-
-// ==================== Home Screen ====================
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -126,17 +88,37 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  List<String> selectedDishes = [];
-  String selectedHallName = '';
 
-  double responsiveWidth(BuildContext context, double percentage) =>
-      MediaQuery.of(context).size.width * percentage;
+  double responsiveWidth(BuildContext context, double p) =>
+      MediaQuery.of(context).size.width * p;
+  double responsiveHeight(BuildContext context, double p) =>
+      MediaQuery.of(context).size.height * p;
+  double responsiveFont(BuildContext context, double p) =>
+      MediaQuery.of(context).size.width * (p / 100);
 
-  double responsiveHeight(BuildContext context, double percentage) =>
-      MediaQuery.of(context).size.height * percentage;
+  final PageController _sliderController = PageController();
+  Timer? _sliderTimer;
 
-  double responsiveFont(BuildContext context, double percentage) =>
-      MediaQuery.of(context).size.width * (percentage / 100);
+  @override
+  void initState() {
+    super.initState();
+    _sliderTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_sliderController.hasClients) {
+        int nextPage = _sliderController.page!.round() + 1;
+        if (nextPage >= 10) nextPage = 0;
+        _sliderController.animateToPage(nextPage,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeInOut);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _sliderController.dispose();
+    _sliderTimer?.cancel();
+    super.dispose();
+  }
 
   Widget _getPage(int index) {
     switch (index) {
@@ -145,198 +127,238 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const Center(child: Text("Functions Page"));
       case 2:
-        return const Center(child: Text("Proposal Page"));
+        return const ProposalScreen();
       case 3:
-        return const Center(child: Text("Profile Page"));
+        return const ProfileScreen();
+      case 4:
+        return const ChatScreen();
       default:
         return _buildHomePage();
     }
   }
 
   Widget _buildHomePage() {
+    final List<Map<String, dynamic>> services = [
+      {
+        "title": "Agents",
+        "icon": Icons.person,
+        "image": "assets/images/services/agent.jpg"
+      },
+      {
+        "title": "Halls",
+        "icon": Icons.apartment,
+        "image": "assets/images/services/hall.jpg"
+      },
+      {
+        "title": "Restaurants",
+        "icon": Icons.restaurant,
+        "image": "assets/images/services/restaurant.jpg"
+      },
+      {
+        "title": "Catering",
+        "icon": Icons.set_meal,
+        "image": "assets/images/services/catering.jpg"
+      },
+      {
+        "title": "Proposal",
+        "icon": Icons.card_giftcard,
+        "image": "assets/images/services/proposal.jpg"
+      },
+      {
+        "title": "Function Calculator",
+        "icon": Icons.calculate,
+        "image": "assets/images/services/calculator.jpg"
+      },
+    ];
+
+    final List<String> sliderImages =
+        List.generate(10, (index) => "assets/images/slider/slide${index + 1}.jpg");
+
     return SingleChildScrollView(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: responsiveWidth(context, 0.03)),
-        child: Column(
-          children: [
-            SizedBox(height: responsiveHeight(context, 0.02)),
-            _buildTopImageCards(),
-            SizedBox(height: responsiveHeight(context, 0.05)),
-            GestureDetector(
-              onTap: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
-                  ? _onNextPressed
-                  : null,
-              child: Container(
-                height: responsiveHeight(context, 0.07),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
-                      ? LinearGradient(
-                          colors: [Colors.redAccent.shade700, Colors.deepOrangeAccent.shade400],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        )
-                      : LinearGradient(
-                          colors: [Colors.grey.shade400, Colors.grey.shade500],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                  boxShadow: selectedHallName.isNotEmpty && selectedDishes.isNotEmpty
-                      ? [BoxShadow(color: Colors.redAccent.withOpacity(0.5), blurRadius: 12, offset: const Offset(0, 4))]
-                      : [],
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  "Next",
-                  style: TextStyle(
-                    fontSize: responsiveFont(context, 18),
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: responsiveHeight(context, 0.05)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopImageCards() {
-    return Column(
-      children: [
-        _buildImageCard("Menus", "assets/images/menu_background.jpg", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CategoryScreen(
-                title: "Menus",
-                groupedItems: groupedDishes,
-                itemImages: dishImages,
-              ),
-            ),
-          );
-        }),
-        _buildImageCard("Cities", "assets/images/cities_background.jpg", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CategoryScreen(
-                title: "Cities",
-                groupedItems: groupedCities,
-                itemImages: cityImages,
-              ),
-            ),
-          );
-        }),
-        _buildImageCard("Functions", "assets/images/functions_background.jpg", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CategoryScreen(
-                title: "Functions",
-                items: functionsList,
-                itemImages: functionImages,
-              ),
-            ),
-          );
-        }),
-        _buildImageCard("Available Halls", "assets/images/halls_background.jpg", () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CategoryScreen(
-                title: "Available Halls",
-                items: availableHalls.map((h) => h["name"].toString()).toList(),
-                itemImages: {for (var hall in availableHalls) hall["name"].toString(): hall["image"].toString()},
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildImageCard(String title, String background, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: responsiveHeight(context, 0.22),
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(vertical: 10),
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(background, fit: BoxFit.cover, width: double.infinity),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  alignment: Alignment.center,
-                  color: Colors.black.withOpacity(0.3),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: responsiveHeight(context, 0.25),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset("assets/images/top_banner.jpg", fit: BoxFit.cover),
+                Container(color: Colors.black.withOpacity(0.3)),
+                Center(
                   child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: responsiveFont(context, 8),
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    "Professional Event Services",
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: responsiveFont(context, 6),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amberAccent,
+                      shadows: [
+                        Shadow(
+                            color: Colors.black.withOpacity(0.7),
+                            blurRadius: 6,
+                            offset: const Offset(2, 2))
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: services.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemBuilder: (context, index) {
+                final service = services[index];
+                return _buildCard(
+                    service["title"] as String,
+                    service["icon"] as IconData,
+                    service["image"] as String);
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            height: 140,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple.shade800,
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: PageView.builder(
+              controller: _sliderController,
+              itemCount: sliderImages.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: DecorationImage(
+                        image: AssetImage(sliderImages[index]), fit: BoxFit.cover),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3))
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(String title, IconData icon, String imagePath) {
+    return GestureDetector(
+      onTap: () {
+        if (title == "Proposal") {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ProposalScreen()));
+        } else if (title == "Function Calculator") {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const FunctionCalculatorScreen()));
+        } else {
+          // Items ke naam
+          final items = categoryData[title]!.map((e) => e["name"] as String).toList();
+
+          // Images ko List<String> me convert kiya
+          final itemImages = categoryData[title]!
+              .map((itemMap) => (itemMap["images"] as List).first as String)
+              .toList();
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CategoryScreen(
+                title: title,
+                items: items,
+                itemImages: itemImages, // Correct type ab
               ),
             ),
+          );
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.zero,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 3))
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+            child: Container(
+              alignment: Alignment.center,
+              color: Colors.black.withOpacity(0.25),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: Colors.amberAccent, size: 32),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: responsiveFont(context, 4.5),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(color: Colors.black.withOpacity(0.4), blurRadius: 3)
+                        ]),
+                  )
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  void _onNextPressed() {
-    final selectedHall = availableHalls.firstWhere((hall) => hall["name"] == selectedHallName);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AdvancedFunctionBookingScreen(
-          hall: {
-            ...selectedHall,
-            "location": selectedHall["city"],
-            "price": 250000,
-            "capacity": 500,
-            "perHeadRate": 2500,
-            "facilities": ["AC","Parking","Lighting","Catering","Stage Decoration"],
-            "images": ["https://via.placeholder.com/600x300","https://via.placeholder.com/600x300"],
-          },
-          selectedDishes: selectedDishes,
-        ),
-      ),
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      selectedItemColor: Colors.deepPurpleAccent,
+      unselectedItemColor: Colors.grey,
+      type: BottomNavigationBarType.fixed,
+      onTap: (index) => setState(() => _selectedIndex = index),
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: "Home"),
+        BottomNavigationBarItem(icon: Icon(Icons.event_note), label: "Functions"),
+        BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: "Proposal"),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        BottomNavigationBarItem(icon: Icon(Icons.chat), label: "Chat"),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Marriage Halls App")),
       body: _getPage(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.purple,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: "Functions"),
-          BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: "Proposal"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 }

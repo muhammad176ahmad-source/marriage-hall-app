@@ -1,6 +1,6 @@
-import 'dart:io';
+// lib/screens/add_venue_screen.dart
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class AddVenueScreen extends StatefulWidget {
   const AddVenueScreen({super.key});
@@ -10,114 +10,121 @@ class AddVenueScreen extends StatefulWidget {
 }
 
 class _AddVenueScreenState extends State<AddVenueScreen> {
-  int step=0;
-  final PageController controller = PageController();
+  final _formKey = GlobalKey<FormState>();
 
-  void next(){
-    if(step<2){step++; controller.nextPage(duration: const Duration(milliseconds:300),curve: Curves.easeIn); setState(() {});}
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _feeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  DateTime? _selectedDate;
+
+  void _submit() {
+    if (_formKey.currentState!.validate() && _selectedDate != null) {
+      final newBooking = {
+        "name": _nameController.text,
+        "date": DateFormat('dd MMMM yyyy').format(_selectedDate!),
+        "status": "Pending", // default status
+      };
+      Navigator.pop(context, newBooking);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all fields and select a date")),
+      );
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: today,
+      firstDate: today,
+      lastDate: DateTime(today.year + 5),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Venue")),
-      body: Column(
-        children: [
-          LinearProgressIndicator(value:(step+1)/3),
-          Expanded(
-            child: PageView(
-              controller: controller,
-              physics: const NeverScrollableScrollPhysics(),
-              children: const [
-                VenueBasicInfo(),
-                VenuePricing(),
-                VenueFacilities(),
-              ],
-            ),
+      appBar: AppBar(
+        title: const Text("Add Venue"),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: "Venue Name",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (val) => val == null || val.isEmpty ? "Enter venue name" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _feeController,
+                decoration: const InputDecoration(
+                  labelText: "Fee (PKR)",
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (val) => val == null || val.isEmpty ? "Enter fee" : null,
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: "Description (Optional)",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text("Select Date"),
+                subtitle: Text(
+                  _selectedDate != null
+                      ? DateFormat('dd MMMM yyyy').format(_selectedDate!)
+                      : "No date selected",
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _pickDate,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "Add Venue",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: ElevatedButton(onPressed: next, child: const Text("Next")),
-          )
-        ],
+        ),
       ),
-    );
-  }
-}
-
-class VenueBasicInfo extends StatelessWidget {
-  const VenueBasicInfo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: ListView(
-        children: const [
-          TextField(decoration: InputDecoration(labelText: "Venue Name")),
-          TextField(decoration: InputDecoration(labelText: "City")),
-          TextField(decoration: InputDecoration(labelText: "Capacity")),
-        ],
-      ),
-    );
-  }
-}
-
-class VenuePricing extends StatelessWidget {
-  const VenuePricing({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: ListView(
-        children: const [
-          TextField(decoration: InputDecoration(labelText: "Price Per Head")),
-          TextField(decoration: InputDecoration(labelText: "Package Details")),
-        ],
-      ),
-    );
-  }
-}
-
-class VenueFacilities extends StatefulWidget {
-  const VenueFacilities({super.key});
-
-  @override
-  State<VenueFacilities> createState() => _VenueFacilitiesState();
-}
-
-class _VenueFacilitiesState extends State<VenueFacilities> {
-  final facilities = ["AC","Parking","Decoration","Stage","Sound"];
-  final selected = <String>[];
-  final List<File> images=[];
-  final picker = ImagePicker();
-
-  Future<void> pickImage() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if(image!=null){setState(()=>images.add(File(image.path)));}
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text("Select Facilities:"),
-        ...facilities.map((f)=>CheckboxListTile(
-          title: Text(f),
-          value: selected.contains(f),
-          onChanged: (v){setState((){v==true?selected.add(f):selected.remove(f);});},
-        )),
-        const SizedBox(height:10),
-        ElevatedButton(onPressed: pickImage, child: const Text("Upload Photos")),
-        Wrap(
-          children: images.map((img)=>Padding(
-            padding: const EdgeInsets.all(5),
-            child: Image.file(img,height:80,width:80,fit:BoxFit.cover),
-          )).toList(),
-        )
-      ],
     );
   }
 }
